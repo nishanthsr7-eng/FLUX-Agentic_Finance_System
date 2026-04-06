@@ -1,0 +1,19 @@
+:root {
+  /* Surfaces */
+  --bg-primary: #0B0B0B;
+  --bg-element: rgba(255, 255, 255, 0.05);
+
+  /* Accents */
+  --accent-teal: #2ECC71;
+  --accent-teal-glow: rgba(46, 204, 113, 0.3);
+  --accent-pink: #E056FD;
+  --accent-blue: #3b82f6;
+
+  /* Text Colors */
+  --text-primary: #FFFFFF;
+  --text-secondary: #A0A0A0;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, sans-serif;
+  --font-serif: 'Playfair Display', serif;
+}
