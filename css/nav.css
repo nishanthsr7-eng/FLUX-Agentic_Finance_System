@@ -1,0 +1,47 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 24px 48px;
+  position: relative;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 1s ease-out;
+}
+
+.navbar.visible {
+  opacity: 1;
+}
+
+.nav-left, .nav-right {
+  display: flex;
+  gap: 32px;
+}
+
+.nav-left a, .nav-right a {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.nav-brand {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 1px;
+}
+
+.brand-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--accent-teal);
+}
+
+@media (max-width: 768px) {
+  .nav-left, .nav-right {
+    display: none;
+  }
+}

@@ -1,0 +1,29 @@
+/* Base state — hidden */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(60px) rotateX(-10deg);
+  transition:
+    opacity var(--duration-scroll) var(--ease-out-expo),
+    transform var(--duration-scroll) var(--ease-out-expo);
+}
+
+/* Revealed state */
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0) rotateX(0deg);
+}
+
+/* Stagger children */
+.animate-on-scroll.visible:nth-child(1) { transition-delay: 0ms; }
+.animate-on-scroll.visible:nth-child(2) { transition-delay: 100ms; }
+.animate-on-scroll.visible:nth-child(3) { transition-delay: 200ms; }
+.animate-on-scroll.visible:nth-child(4) { transition-delay: 300ms; }
+.animate-on-scroll.visible:nth-child(5) { transition-delay: 400ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-on-scroll {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
