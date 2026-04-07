@@ -1,0 +1,646 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLUX | Finance Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="./css/tokens.css">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/nav.css">
+  <link rel="stylesheet" href="./css/hero.css">
+  <link rel="stylesheet" href="./css/features.css">
+  <link rel="stylesheet" href="./css/layout-extensions.css">
+</head>
+
+<body>
+  <!-- SVG filter: strips near-white pixels from the iPhone bezel overlay image -->
+  <!-- White screen area + padding become transparent; orange/dark bezel stays visible -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;"
+    aria-hidden="true">
+    <defs>
+      <filter id="removeWhite" color-interpolation-filters="sRGB" x="0%" y="0%" width="100%" height="100%">
+        <!-- Step 1: Isolate near-white pixels into a mask (R>0.9, G>0.9, B>0.9) -->
+        <feColorMatrix type="matrix" values="1 0 0 0 -0.88
+                  0 1 0 0 -0.88
+                  0 0 1 0 -0.88
+                  0 0 0 20 -17" result="whiteMask" />
+        <!-- Step 2: Invert so white becomes transparent, colored becomes opaque -->
+        <feComposite in="SourceGraphic" in2="whiteMask" operator="out" />
+      </filter>
+    </defs>
+  </svg>
+
+  <!-- Huge Background Text -->
+  <div class="bg-text-container">
+    <div class="bg-text">fl ux</div>
+  </div>
+
+  <!-- Navigation bar -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <a href="pages/about.html">About</a>
+      <a href="pages/contact.html">Contact Us</a>
+    </div>
+    <div class="nav-brand">
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+      </svg>
+      FLUX
+    </div>
+    <div class="nav-right">
+      <a href="pages/login.html">Log In</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="content-wrapper">
+
+      <!-- Side Content Left -->
+      <div class="side-info left-info">
+        <div class="info-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+        </div>
+        <p class="side-desc">Security that evolves with every move you make.</p>
+        <a href="pages/signin.html" class="pill-btn solid-white">Get Started</a>
+      </div>
+
+      <!-- Center Overlapping Cards -->
+      <div class="cards-stack">
+        <!-- Bottom Card (Teal Gradient) -->
+        <div class="card card-bottom mesh-teal">
+          <div class="card-header">
+            <div class="card-brand"><svg class="small-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg> FLUX</div>
+            <div class="card-type">BUSINESS</div>
+          </div>
+          <div class="card-chip">
+            <div class="chip-line"></div>
+            <div class="chip-line"></div>
+          </div>
+          <div class="card-number">
+            <span>5412</span>
+            <span>7512</span>
+            <span>3456</span>
+            <span>4920</span>
+          </div>
+          <div class="card-footer">
+            <div class="card-info">
+              <span class="card-label">VALID THRU</span>
+              <span class="card-value">04/28</span>
+            </div>
+            <div class="card-info">
+              <span class="card-label">CVV</span>
+              <span class="card-value">•••</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Card (Pink Gradient) -->
+        <div class="card card-top mesh-pink">
+          <div class="card-header">
+            <div class="card-brand">
+              <svg class="small-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+              FLUX
+            </div>
+            <div class="card-type">PREMIUM</div>
+          </div>
+          <div class="card-chip">
+            <div class="chip-line"></div>
+            <div class="chip-line"></div>
+          </div>
+          <div class="card-number">
+            <span>4532</span>
+            <span>8821</span>
+            <span>9045</span>
+            <span>7623</span>
+          </div>
+          <div class="card-footer space-between">
+            <div class="card-holder-info">
+              <span class="card-label">CARDHOLDER</span>
+              <span class="card-name">Nishanth S</span>
+            </div>
+            <div class="mastercard-circles">
+              <div class="mc-red"></div>
+              <div class="mc-yellow"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Side Content Right -->
+      <div class="side-info right-info">
+        <h2 class="side-title">Global<br>Transactions</h2>
+        <p class="side-desc">A unified intelligence for navigating vast digital ecosystems effortlessly across every
+          border.</p>
+        <button class="pill-btn outline-teal">Explore Features</button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Metrics Bar -->
+  <section class="metrics-bar">
+    <div class="metric-item">
+      <h3 class="metric-val">
+        25k+
+        <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="User Icon"
+          style="width: 18px; height: 18px; vertical-align: middle; margin-right: 8px; filter: invert(100%);">
+      </h3>
+      <p class="metric-text">Operating in 40+ countries maintaining seamless delivery worldwide.</p>
+    </div>
+    <div class="metric-divider"></div>
+    <div class="metric-item">
+      <h3 class="metric-val">99%</h3>
+      <p class="metric-text">Our collaborations extend to 99% of global markets effortlessly.</p>
+    </div>
+    <div class="metric-divider"></div>
+    <div class="metric-item">
+      <h3 class="metric-val">87%</h3>
+      <p class="metric-text">Customer satisfaction rating with rapidly evolving features.</p>
+    </div>
+  </section>
+
+  <!-- Finance App Section -->
+  <section class="section app-section">
+    <div class="content-wrapper centered-col">
+      <h2 class="section-title text-center animate-on-scroll">Streamline How You<br>Handle Your Finances</h2>
+      <p class="section-subtitle text-center animate-on-scroll">All your financial tools, insights, and accounts in one
+        simple platform.</p>
+
+      <div class="segmented-control animate-on-scroll">
+        <div class="seg-indicator"></div>
+        <div class="seg-btn active">
+          <svg class="small-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M3 9h18M9 21V9" />
+          </svg> Manage
+        </div>
+        <div class="seg-btn">
+          <svg class="small-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="2" x2="12" y2="22" />
+            <polyline points="17 5 12 2 7 5" />
+          </svg> Invest
+        </div>
+        <div class="seg-btn">
+          <svg class="small-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg> Secure
+        </div>
+      </div>
+
+      <div class="app-showcase-grid">
+        <div class="features-list animate-on-scroll">
+
+          <div class="feature-item">
+            <h3 class="feature-title">Own Your Financial Future</h3>
+            <p class="feature-desc">FLUX combines intuitive technology with actionable insights to help you manage your
+              wealth with confidence and clarity.</p>
+          </div>
+
+          <div class="feature-item muted">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg></div>
+            <div>
+              <h4 class="feature-subtitle">Real-Time Spending Insights</h4>
+              <p class="feature-subdesc">Monitor your expenses as they happen. Customize your dashboard, set
+                personalized categories and filter data as per needs.
+              </p>
+            </div>
+          </div>
+
+          <div class="feature-item muted">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+              </svg></div>
+            <div>
+              <h4 class="feature-subtitle">Unified Financial Dashboard</h4>
+              <p class="feature-subdesc">Connect all accounts and the cards in one secure location for a comprehensive
+                overview.</p>
+            </div>
+          </div>
+
+          <div class="feature-item muted">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="16" />
+                <line x1="8" y1="12" x2="16" y2="12" />
+              </svg></div>
+            <div>
+              <h4 class="feature-subtitle">Smart Budgeting & Goal Tracking</h4>
+              <p class="feature-subdesc">Establish network analysis for secure capitalized data, build waitlists.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="app-mockup animate-on-scroll">
+          <div class="phone-frame">
+
+            <!-- ── App Screen Content (sits BELOW the bezel overlay) ── -->
+            <div class="app-screen">
+
+              <!-- Dynamic Island pill -->
+              <div class="dynamic-island"></div>
+
+              <!-- ── SLIDE 1: Dashboard ── -->
+              <div class="screen-slide slide-1">
+                <div class="ss-topbar">
+                  <span class="ss-time">9:41</span>
+                  <span class="ss-topbar-title">Dashboard</span>
+                  <div class="ss-avatar-dot">N</div>
+                </div>
+                <div class="ss-balance-card">
+                  <p class="ss-label">Total Balance</p>
+                  <h2 class="ss-bignum">$280,120<span class="ss-cents">.23</span></h2>
+                  <div class="ss-badge-up">↑ +2.4% this month</div>
+                  <svg class="ss-sparkline" viewBox="0 0 200 40" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="rgba(255,255,255,0.3)" />
+                        <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+                      </linearGradient>
+                    </defs>
+                    <polyline points="0,35 30,28 55,22 80,26 105,14 130,18 155,8 175,11 200,4" stroke="#ffffff"
+                      stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+                    <polygon points="0,35 30,28 55,22 80,26 105,14 130,18 155,8 175,11 200,4 200,40 0,40"
+                      fill="url(#sg)" />
+                  </svg>
+                </div>
+                <div class="ss-quick-actions">
+                  <div class="ss-qa">
+                    <div class="ss-qa-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="19" x2="12" y2="5" />
+                        <polyline points="5 12 12 5 19 12" />
+                      </svg>
+                    </div>
+                    <span>Send</span>
+                  </div>
+                  <div class="ss-qa">
+                    <div class="ss-qa-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <polyline points="19 12 12 19 5 12" />
+                      </svg>
+                    </div>
+                    <span>Receive</span>
+                  </div>
+                  <div class="ss-qa">
+                    <div class="ss-qa-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="5" width="20" height="14" rx="2" />
+                        <line x1="2" y1="10" x2="22" y2="10" />
+                      </svg>
+                    </div>
+                    <span>Pay</span>
+                  </div>
+                  <div class="ss-qa">
+                    <div class="ss-qa-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="1" />
+                        <circle cx="19" cy="12" r="1" />
+                        <circle cx="5" cy="12" r="1" />
+                      </svg>
+                    </div>
+                    <span>More</span>
+                  </div>
+                </div>
+                <div class="ss-section-row"><span>Recent Activity</span><span class="ss-see-all">See all</span></div>
+                <div class="ss-tx-list">
+                  <div class="ss-tx-item">
+                    <div class="ss-tx-icon ss-blue">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+                        <line x1="6" y1="1" x2="6" y2="4" />
+                        <line x1="10" y1="1" x2="10" y2="4" />
+                        <line x1="14" y1="1" x2="14" y2="4" />
+                      </svg>
+                    </div>
+                    <div class="ss-tx-info"><span class="ss-tx-name">Starbucks</span><span class="ss-tx-date">Today,
+                        2:45 PM</span></div>
+                    <span class="ss-tx-amt neg">-$12.50</span>
+                  </div>
+                  <div class="ss-tx-item">
+                    <div class="ss-tx-icon ss-teal">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                      </svg>
+                    </div>
+                    <div class="ss-tx-info"><span class="ss-tx-name">Salary Deposit</span><span
+                        class="ss-tx-date">Yesterday</span></div>
+                    <span class="ss-tx-amt pos">+$8,400</span>
+                  </div>
+                  <div class="ss-tx-item">
+                    <div class="ss-tx-icon ss-pink">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="23 7 16 12 23 17 23 7" />
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                      </svg>
+                    </div>
+                    <div class="ss-tx-info"><span class="ss-tx-name">Netflix</span><span class="ss-tx-date">Oct
+                        24</span></div>
+                    <span class="ss-tx-amt neg">-$19.99</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ── SLIDE 2: Portfolio ── -->
+              <div class="screen-slide slide-2">
+                <div class="ss-topbar">
+                  <span class="ss-time">9:41</span>
+                  <span class="ss-topbar-title">Portfolio</span>
+                  <div class="ss-avatar-dot">N</div>
+                </div>
+                <div class="ss-balance-card">
+                  <p class="ss-label">Portfolio Value</p>
+                  <h2 class="ss-bignum">$1,240,500<span class="ss-cents">.00</span></h2>
+                  <div class="ss-badge-up">↑ +12.8% all time</div>
+                </div>
+                <div class="ss-donut-wrap">
+                  <svg viewBox="0 0 120 120" class="ss-donut">
+                    <circle cx="60" cy="60" r="42" fill="none" stroke="#222" stroke-width="20" />
+                    <circle cx="60" cy="60" r="42" fill="none" stroke="#ffffff" stroke-width="20"
+                      stroke-dasharray="105 159" stroke-dashoffset="0" transform="rotate(-90 60 60)" />
+                    <circle cx="60" cy="60" r="42" fill="none" stroke="#ffffff" stroke-width="20" stroke-opacity="0.65"
+                      stroke-dasharray="52 212" stroke-dashoffset="-105" transform="rotate(-90 60 60)" />
+                    <circle cx="60" cy="60" r="42" fill="none" stroke="#ffffff" stroke-width="20" stroke-opacity="0.45"
+                      stroke-dasharray="26 238" stroke-dashoffset="-157" transform="rotate(-90 60 60)" />
+                    <circle cx="60" cy="60" r="42" fill="none" stroke="#ffffff" stroke-width="20" stroke-opacity="0.30"
+                      stroke-dasharray="30 234" stroke-dashoffset="-183" transform="rotate(-90 60 60)" />
+                    <text x="60" y="56" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">40%</text>
+                    <text x="60" y="68" text-anchor="middle" fill="#8fa398" font-size="7">BTC</text>
+                  </svg>
+                  <div class="ss-legend">
+                    <div class="ss-legend-item"><span class="ss-dot" style="background:#ffffff"></span>BTC 40%</div>
+                    <div class="ss-legend-item"><span class="ss-dot" style="background:#cccccc"></span>AAPL 20%</div>
+                    <div class="ss-legend-item"><span class="ss-dot" style="background:#888888"></span>ETH 10%</div>
+                    <div class="ss-legend-item"><span class="ss-dot" style="background:#444444"></span>Other 30%</div>
+                  </div>
+                </div>
+                <div class="ss-section-row"><span>Holdings</span></div>
+                <div class="ss-tx-list">
+                  <div class="ss-tx-item">
+                    <div class="ss-tx-icon"
+                      style="background:rgba(255,255,255,0.08);color:#ffffff;font-weight:800;font-size:14px;">₿</div>
+                    <div class="ss-tx-info"><span class="ss-tx-name">Bitcoin</span><span class="ss-tx-date">2.4
+                        BTC</span></div>
+                    <div class="ss-holding-right"><span class="ss-tx-name">$94,200</span><span
+                        class="ss-tx-amt pos">+12.4%</span></div>
+                  </div>
+                  <div class="ss-tx-item">
+                    <div class="ss-tx-icon ss-blue" style="font-size:12px;font-weight:700;">A</div>
+                    <div class="ss-tx-info"><span class="ss-tx-name">Apple Inc.</span><span class="ss-tx-date">18
+                        shares</span></div>
+                    <div class="ss-holding-right"><span class="ss-tx-name">$3,240</span><span
+                        class="ss-tx-amt pos">+4.2%</span></div>
+                  </div>
+                  <div class="ss-tx-item">
+                    <div class="ss-tx-icon ss-pink" style="font-size:14px;font-weight:800;">Ξ</div>
+                    <div class="ss-tx-info"><span class="ss-tx-name">Ethereum</span><span class="ss-tx-date">5.8
+                        E</span></div>
+                    <div class="ss-holding-right"><span class="ss-tx-name">$12,180</span><span
+                        class="ss-tx-amt neg">-2.1%</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ── SLIDE 3: Send Money ── -->
+              <div class="screen-slide slide-3">
+                <div class="ss-topbar">
+                  <span class="ss-time">9:41</span>
+                  <span class="ss-topbar-title">Send Money</span>
+                  <div class="ss-avatar-dot">N</div>
+                </div>
+                <div class="ss-recipient-row">
+                  <div class="ss-recipient-avatar">MJ</div>
+                  <div class="ss-tx-info">
+                    <span class="ss-tx-name">Marcus Johnson</span>
+                    <span class="ss-tx-date">@marcus.j · FLUX</span>
+                  </div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" width="18">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <div class="ss-send-amount-block">
+                  <p class="ss-label">Amount to send</p>
+                  <div class="ss-send-num">$<span class="ss-send-val">500</span><span class="ss-cursor">|</span></div>
+                  <p class="ss-avail">Available balance: $280,120.23</p>
+                </div>
+                <div class="ss-numpad">
+                  <div class="ss-numpad-row"><span>1</span><span>2</span><span>3</span></div>
+                  <div class="ss-numpad-row"><span>4</span><span>5</span><span>6</span></div>
+                  <div class="ss-numpad-row"><span>7</span><span>8</span><span>9</span></div>
+                  <div class="ss-numpad-row"><span>.</span><span>0</span><span>⌫</span></div>
+                </div>
+                <div class="ss-confirm-btn">
+                  <div class="ss-confirm-glow"></div>
+                  Send $500
+                </div>
+              </div>
+
+            </div><!-- /app-screen -->
+
+            <!-- ── iPhone Bezel Overlay (on top, z-index 10) ── -->
+            <img src="./assets/images/phone-bezel.png" id="phoneBezelOverlay" class="phone-hardware-overlay"
+              alt="iPhone 17 Pro Frame" crossorigin="anonymous">
+
+          </div><!-- /phone-frame -->
+        </div><!-- /app-mockup -->
+      </div><!-- /app-showcase-grid -->
+    </div><!-- /content-wrapper -->
+  </section><!-- /app-section -->
+
+  <!-- Purple Philosophy Card -->
+  <section class="section philosophy-section">
+    <div class="philosophy-card animate-on-scroll">
+      <p>FLUX provides a sophisticated digital wallet solution engineered with a focus on user-centric design and
+        operational reliability. The platform is optimized to deliver a seamless experience, integrating intuitive
+        navigation with robust performance to ensure maximum efficiency.
+
+        By prioritizing streamlined workflows, FLUX enables the secure and effective management of digital assets. This
+        solution is tailored for those who require a dependable interface that balances comprehensive functionality with
+        ease of access.</p>
+    </div>
+  </section>
+
+  <!-- Reviews Section -->
+  <section class="section reviews-section">
+    <div class="reviews-card animate-on-scroll">
+      <div class="reviews-grid">
+        <div class="reviews-list">
+          <!-- Review 1 -->
+          <div class="review-item">
+            <p>"This app makes budgeting and saving a breeze. It's user-friendly and gives me control over my finances."
+            </p>
+            <div class="reviewer">
+              <div class="avatar" style="background-image: url('./assets/images/avatar-1.jpeg')"></div>
+              <span class="name">Marcus Johnson</span>
+              <span class="rating">⭐️ 4.0</span>
+            </div>
+          </div>
+          <!-- Review 2 -->
+          <div class="review-item">
+            <p>"I used to dread handling my finances, but this app has completely changed that. Made budgeting a
+              breeze."</p>
+            <div class="reviewer">
+              <div class="avatar" style="background-image: url('./assets/images/avatar-2.jpeg')"></div>
+              <span class="name">Alina Mark</span>
+              <span class="rating">⭐️ 4.1</span>
+            </div>
+          </div>
+          <!-- Review 3 -->
+          <div class="review-item">
+            <p>"Helps me manage my money but also provides a secure and convenient way to make payments."</p>
+            <div class="reviewer">
+              <div class="avatar" style="background-image: url('./assets/images/avatar-3.avif')"></div>
+              <span class="name">Jon Doe</span>
+              <span class="rating">⭐️ 4.4</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="review-highlight">
+          <h2 class="serif-title">"An everyday essential.<br>This app simplifies payments and money management securely,
+            whether at a cafe or a local store."</h2>
+          <div class="reviewer mt-auto">
+            <div class="avatar" style="background-image: url('./assets/images/avatar-4.jpeg')"></div>
+            <span class="name">Deeny Jones</span>
+            <span class="rating">⭐️ 4.8</span>
+          </div>
+        </div>
+
+        <!-- Phone Overlap Visual -->
+        <div class="phone-overlap">
+          <div class="circle-glow"></div>
+          <div class="phone-hand">
+            <div class="phone-screen-white">
+              <div class="success-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
+              <h4>Your Payment Has Been<br>Securely Approved</h4>
+              <div class="btn-mock">Done</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Secure & Trusted Section -->
+  <section class="section secure-section">
+    <div class="content-wrapper centered-col">
+      <h2 class="section-title serif-title text-center animate-on-scroll">Secure & Trusted</h2>
+      <p class="section-subtitle text-center animate-on-scroll">All your financial tools, insights, and accounts in one
+        simple platform.</p>
+
+      <div class="secure-grid animate-on-scroll">
+        <div class="secure-card">
+          <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg></div>
+          <h4>Fully Regulated Framework</h4>
+          <p>Experience peace of mind with a platform built on SEC and FINRA-registered brokerage standards, prioritizing transparency and legal integrity.</p>
+        </div>
+        <div class="secure-card highlighted">
+          <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg></div>
+          <h4>Institutional-Grade Security</h4>
+          <p>Your portfolio is secured through our SIPC membership and rigorous safety protocols, ensuring institutional-grade protection for all digital assets.<br><br>For details please
+            check<br><a href="#">www.flux.com</a></p>
+        </div>
+        <div class="secure-card">
+          <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path
+                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg></div>
+          <h4>Round-the-Clock Support</h4>
+          <p>Access premium assistance whenever you need it. Our expert experience team is operational seven days a week to ensure a seamless workflow.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-top animate-on-scroll">
+      <div class="cta-box">
+        <h2 class="serif-title">Are you interested<br>with FLUX?</h2>
+        <a href="pages/signin.html" class="pill-btn outline-teal">Get Started</a>
+      </div>
+
+      <div class="footer-links">
+        <div class="link-col">
+          <h4>Company</h4>
+          <a href="pages/security.html">Security</a>
+          <a href="pages/brand.html">Brand Guidelines</a>
+          <a href="pages/careers.html">Careers</a>
+          <a href="pages/faq.html">FAQs</a>
+        </div>
+        <div class="link-col">
+          <h4>Legal Information</h4>
+          <a href="pages/privacy.html">Privacy Policy</a>
+          <a href="pages/terms.html">Terms of Service</a>
+          <a href="pages/cookies.html">Cookies Policy</a>
+          <a href="pages/shield.html">Privacy Shield</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom glass-pill animate-on-scroll">
+      <div class="nav-brand">
+        <svg class="small-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+        FLUX
+      </div>
+
+      <div class="footer-nav">
+        <a href="index.html">Home</a>
+        <a href="pages/about.html">About</a>
+        <a href="pages/contact.html">Contact Us</a>
+      </div>
+
+      <div class="socials">
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+          </svg></a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
+          </svg></a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+          </svg></a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./js/main.js" type="module"></script>
+</body>
+
+</html>
