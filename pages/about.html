@@ -1,0 +1,253 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About | FLUX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/nav.css">
+  <link rel="stylesheet" href="../css/hero.css">
+  <link rel="stylesheet" href="../css/layout-extensions.css">
+  <style>
+    .about-hero {
+      padding: 160px 48px 80px;
+      text-align: center;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .about-title {
+      font-family: var(--font-serif);
+      font-size: clamp(48px, 8vw, 96px);
+      line-height: 1.1;
+      margin-bottom: 32px;
+      background: linear-gradient(to bottom, #fff, #666);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .about-lead {
+      font-size: 20px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      max-width: 700px;
+      margin: 0 auto 60px;
+    }
+
+    .story-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      padding: 80px 48px;
+      max-width: 1200px;
+      margin: 0 auto;
+      align-items: center;
+    }
+
+    .story-content h2 {
+      font-family: var(--font-serif);
+      font-size: 40px;
+      margin-bottom: 24px;
+    }
+
+    .story-content p {
+      color: var(--text-secondary);
+      font-size: 18px;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .story-image {
+      background: var(--bg-element);
+      border-radius: 32px;
+      height: 500px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+    }
+
+    .story-image::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 30%, var(--accent-teal-glow), transparent);
+      opacity: 0.5;
+    }
+
+    .values-section {
+      padding: 120px 48px;
+      background: radial-gradient(circle at center, #111 0%, #000 100%);
+    }
+
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .value-card {
+      padding: 40px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      transition: transform 0.3s ease;
+    }
+
+    .value-card:hover {
+      transform: translateY(-10px);
+      border-color: var(--accent-teal);
+    }
+
+    .value-icon {
+      width: 48px;
+      height: 48px;
+      color: var(--accent-teal);
+      margin-bottom: 24px;
+    }
+
+    .value-card h3 {
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+
+    .value-card p {
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      .story-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+      .values-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Huge Background Text -->
+  <div class="bg-text-container">
+    <div class="bg-text visible">fl ux</div>
+  </div>
+
+  <nav class="navbar visible">
+    <div class="nav-left">
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact Us</a>
+    </div>
+    <div class="nav-brand">
+      <a href="../index.html" style="display:flex; align-items:center; gap:8px;">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+        FLUX
+      </a>
+    </div>
+    <div class="nav-right">
+      <a href="login.html">Log In</a>
+    </div>
+  </nav>
+
+  <header class="about-hero">
+    <h1 class="about-title">Reimagining<br>Finance</h1>
+    <p class="about-lead">We are on a mission to build the future of money — a seamless, intelligent, and borderless ecosystem for everyone.</p>
+  </header>
+
+  <section class="story-grid">
+    <div class="story-image">
+      <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop" alt="The Story" style="width:100%; height:100%; object-fit:cover; opacity: 0.6;">
+    </div>
+    <div class="story-content">
+      <h2>The FLUX Vision</h2>
+      <p>Established in 2024, FLUX was developed to address a fundamental challenge: the unnecessary complexity of modern financial systems. We believe that wealth management should be as intuitive and seamless as everyday digital communication.</p>
+      <p>By integrating sophisticated design with institutional-grade security, we have engineered a platform that empowers individuals to exert full control over their financial trajectory, free from the inefficiencies inherent in legacy systems.</p>
+    </div>
+  </section>
+
+  <section class="values-section">
+    <div class="values-grid">
+      <div class="value-card">
+        <div class="value-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+        </div>
+        <h3>Prioritizing Your Protection</h3>
+        <p>Security is a fundamental right, not an optional feature. Our platform is engineered with a security-first methodology, ensuring that every protocol is designed to safeguard your assets.</p>
+      </div>
+      <div class="value-card">
+        <div class="value-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+        </div>
+        <h3>Performance at Scale</h3>
+        <p>In a high-velocity financial landscape, efficiency is paramount. We optimize every transaction and interaction to ensure your capital moves as rapidly as you do.</p>
+      </div>
+      <div class="value-card">
+        <div class="value-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 12 20 22 4 22 4 12"></polyline>
+            <rect x="2" y="7" width="20" height="5"></rect>
+            <line x1="12" y1="22" x2="12" y2="7"></line>
+            <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+            <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+          </svg>
+        </div>
+        <h3>Radical Transparency</h3>
+        <p>We eliminate hidden fees and complex terminology. FLUX provides a transparent, honest financial experience tailored for the modern investor.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="cta-box">
+        <h2 class="serif-title">Ready to join<br>the future?</h2>
+        <a href="signin.html" class="pill-btn outline-teal">Get Started</a>
+      </div>
+      <div class="footer-links">
+        <div class="link-col">
+          <h4>Company</h4>
+          <a href="security.html">Security</a>
+          <a href="brand.html">Brand Guidelines</a>
+          <a href="careers.html">Careers</a>
+          <a href="faq.html">FAQs</a>
+        </div>
+        <div class="link-col">
+          <h4>Legal Information</h4>
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="terms.html">Terms of Service</a>
+          <a href="cookies.html">Cookies Policy</a>
+          <a href="shield.html">Privacy Shield</a>
+        </div>
+      </div>
+    <div class="footer-bottom glass-pill">
+      <div class="nav-brand">
+        <svg class="small-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+        FLUX
+      </div>
+      <div class="socials">
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg></a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
