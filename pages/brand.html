@@ -1,0 +1,223 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Technology & Partners | FLUX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/nav.css">
+  <link rel="stylesheet" href="../css/hero.css">
+  <link rel="stylesheet" href="../css/layout-extensions.css">
+  <style>
+    .tech-content {
+      padding: 160px 48px 120px;
+      max-width: 1100px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .tech-header {
+      margin-bottom: 100px;
+      text-align: center;
+    }
+
+    .tech-title {
+      font-family: var(--font-serif);
+      font-size: clamp(40px, 6vw, 64px);
+      line-height: 1.1;
+      margin-bottom: 24px;
+      background: linear-gradient(to bottom, #fff, #888);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .tech-hero-card {
+      background: rgba(11, 11, 11, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 40px;
+      padding: 80px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      margin-bottom: 120px;
+    }
+
+    .tech-section h2 {
+      font-family: var(--font-serif);
+      font-size: 36px;
+      margin-bottom: 32px;
+      color: #fff;
+    }
+
+    .tech-section p {
+      color: var(--text-secondary);
+      line-height: 1.8;
+      font-size: 18px;
+      margin-bottom: 24px;
+      max-width: 800px;
+    }
+
+    .collaborators-section {
+      margin-top: 120px;
+    }
+
+    .collaborators-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 40px;
+      margin-top: 60px;
+    }
+
+    .collab-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 40px;
+      text-align: center;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .collab-card:hover {
+      background: rgba(46, 204, 113, 0.05);
+      border-color: rgba(46, 204, 113, 0.2);
+      transform: translateY(-10px);
+    }
+
+    .collab-img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 24px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .collab-name {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+
+    .collab-role {
+      color: var(--accent-teal);
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .tech-tags {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 32px;
+    }
+
+    .tech-tag {
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-text-container">
+    <div class="bg-text visible">fl ux</div>
+  </div>
+
+  <nav class="navbar visible">
+    <div class="nav-left">
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact Us</a>
+    </div>
+    <div class="nav-brand">
+      <a href="../index.html" style="display:flex; align-items:center; gap:8px;">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+        FLUX
+      </a>
+    </div>
+    <div class="nav-right">
+      <a href="login.html">Log In</a>
+    </div>
+  </nav>
+
+  <main class="tech-content">
+    <header class="tech-header">
+      <h1 class="tech-title">Sovereign Architecture</h1>
+      <p class="section-subtitle">The underlying technology powering the future of digital finance.</p>
+    </header>
+
+    <div class="tech-hero-card">
+      <section class="tech-section">
+        <h2>Zero-Knowledge Sovereignty</h2>
+        <p>FLUX is built on a proprietary Zero-Knowledge (ZK) infrastructure that allows for verifiable transactions without compromising individual privacy. This ensures that while the system is highly transparent for auditing, the identity and assets of the user remain exclusively theirs.</p>
+        <p>Our "Sovereign Proof" technology utilizes advanced cryptographic primitives to enable sub-second settlement times across distributed nodes, bypasssing traditional banking latency.</p>
+        
+        <div class="tech-tags">
+          <span class="tech-tag">ZK-SNARKs</span>
+          <span class="tech-tag">Sovereign Rollups</span>
+          <span class="tech-tag">Air-Gapped HSM</span>
+          <span class="tech-tag">Quantum-Safe Layers</span>
+        </div>
+      </section>
+    </div>
+
+    <section class="collaborators-section">
+      <div class="tech-header" style="margin-bottom:40px;">
+        <h2 class="tech-title" style="font-size:40px;">Technical Collaborators</h2>
+        <p class="section-subtitle">The minds behind the FLUX architectural foundation.</p>
+      </div>
+
+      <div class="collaborators-grid">
+        <div class="collab-card">
+          <img src="../assets/images/avatar-3.avif" alt="Marcus Thorne" class="collab-img">
+          <div class="collab-name">Marcus Thorne</div>
+          <div class="collab-role">Chief Architect</div>
+          <p style="font-size: 14px; margin-top: 16px; color: var(--text-secondary);">Expert in distributed ledger technology and ZK-cryptography systems.</p>
+        </div>
+        
+        <div class="collab-card">
+          <img src="../assets/images/avatar-2.jpeg" alt="Elena Vance" class="collab-img">
+          <div class="collab-name">Elena Vance</div>
+          <div class="collab-role">Security Ops Lead</div>
+          <p style="font-size: 14px; margin-top: 16px; color: var(--text-secondary);">Former cybersecurity director specializing in air-gapped asset protection.</p>
+        </div>
+
+        <div class="collab-card">
+          <img src="../assets/images/avatar-1.jpeg" alt="Soren Kjell" class="collab-img">
+          <div class="collab-name">Soren Kjell</div>
+          <div class="collab-role">Protocol Engineer</div>
+          <p style="font-size: 14px; margin-top: 16px; color: var(--text-secondary);">Pioneer in sub-millisecond settlement protocols and node optimization.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-bottom glass-pill">
+      <div class="nav-brand">FLUX</div>
+      <div class="footer-nav">
+        <a href="../index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact Us</a>
+      </div>
+    </div>
+  </footer>
+</body>
+
+</html>
