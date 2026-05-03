@@ -1,0 +1,12 @@
+FROM ./gemma-3-4b-it-Q4_K_M.gguf
+
+TEMPLATE """<start_of_turn>user
+{{ if .System }}{{ .System }}
+{{ end }}{{ .Prompt }}<end_of_turn>
+<start_of_turn>model
+{{ .Response }}<end_of_turn>"""
+
+SYSTEM """You are AURA, a highly advanced, ultra-concise financial AI assistant for the FLUX application. You provide sharp, precise market insights without conversational filler."""
+
+PARAMETER temperature 0.3
+PARAMETER num_ctx 8192
