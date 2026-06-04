@@ -1,0 +1,41 @@
+{
+  "name": "flux-agentic-finance-system",
+  "version": "1.0.0",
+  "description": "AI-powered finance platform: a FastAPI + XGBoost prediction agent with purged walk-forward CV and conformal uncertainty bands, behind a full digital-wallet frontend.",
+  "keywords": [
+    "fintech",
+    "machine-learning",
+    "xgboost",
+    "fastapi",
+    "quantitative-finance",
+    "time-series",
+    "conformal-prediction",
+    "llm",
+    "rag",
+    "paper-trading"
+  ],
+  "homepage": "https://github.com/nishanthsr7-eng/FLUX-Agentic_Finance_System#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nishanthsr7-eng/FLUX-Agentic_Finance_System.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nishanthsr7-eng/FLUX-Agentic_Finance_System/issues"
+  },
+  "author": "Nishanth S <nishanth.sr.7@gmail.com>",
+  "license": "MIT",
+  "type": "commonjs",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "live-server --port=3000 \"--ignorePattern=(\\.db(-wal|-shm)?$|\\.log$|[\\\\/](node_modules|flux_chroma|__pycache__|backend|scripts)([\\\\/]|$))\"",
+    "start": "live-server --port=3000 \"--ignorePattern=(\\.db(-wal|-shm)?$|\\.log$|[\\\\/](node_modules|flux_chroma|__pycache__|backend|scripts)([\\\\/]|$))\"",
+    "api": "uvicorn backend.main:app --reload --port 8000",
+    "test": "pytest backend/prediction -q"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
