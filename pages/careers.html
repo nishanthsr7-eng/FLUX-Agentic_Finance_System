@@ -1,0 +1,168 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Careers | FLUX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/nav.css">
+  <link rel="stylesheet" href="../css/hero.css">
+  <link rel="stylesheet" href="../css/layout-extensions.css">
+  <style>
+    .careers-content {
+      padding: 160px 48px 120px;
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .careers-header {
+      margin-bottom: 80px;
+      text-align: center;
+    }
+
+    .careers-title {
+      font-family: var(--font-serif);
+      font-size: clamp(48px, 8vw, 72px);
+      line-height: 1.1;
+      margin-bottom: 24px;
+      background: linear-gradient(to bottom, #fff, #888);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .job-card {
+      background: rgba(46, 204, 113, 0.03);
+      border: 1px solid rgba(46, 204, 113, 0.1);
+      border-radius: 24px;
+      padding: 32px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(8px);
+    }
+
+    .job-card:hover {
+      background: rgba(46, 204, 113, 0.08);
+      border-color: rgba(46, 204, 113, 0.3);
+      transform: translateX(10px);
+    }
+
+    .job-info h3 {
+      font-size: 20px;
+      margin-bottom: 4px;
+      color: #fff;
+    }
+
+    .job-info p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .job-tag {
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-teal);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-text-container">
+    <div class="bg-text visible">fl ux</div>
+  </div>
+
+  <nav class="navbar visible">
+    <div class="nav-left">
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact Us</a>
+    </div>
+    <div class="nav-brand">
+      <a href="../index.html">FLUX</a>
+    </div>
+    <div class="nav-right"><a href="login.html">Log In</a></div>
+  </nav>
+
+  <main class="careers-content">
+    <header class="careers-header">
+      <h1 class="careers-title">Architecture the Future.</h1>
+      <p class="section-subtitle">Join our distributed team building the next generation of financial sovereignty.</p>
+    </header>
+
+    <div class="job-list">
+      <div class="job-card">
+        <div class="job-info">
+          <h3>Lead Security Architect</h3>
+          <p>Remote / San Francisco / London</p>
+        </div>
+        <div class="job-tag">Full-Time</div>
+      </div>
+      <div class="job-card">
+        <div class="job-info">
+          <h3>Frontend Specialist (Next.js)</h3>
+          <p>Remote / Global</p>
+        </div>
+        <div class="job-tag">Full-Time</div>
+      </div>
+      <div class="job-card">
+        <div class="job-info">
+          <h3>Product Designer</h3>
+          <p>Remote / Berlin / London</p>
+        </div>
+        <div class="job-tag">Contract</div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-bottom glass-pill">
+      <div class="nav-brand">FLUX</div>
+      <div class="footer-nav">
+        <a href="../index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact Us</a>
+      </div>
+    </div>
+  </footer>
+  <script>
+    // Job openings served from MySQL via /db/careers (static cards above are the fallback).
+    (async () => {
+      const API = (window.FLUX_CONFIG && window.FLUX_CONFIG.apiBase) || 'http://localhost:8000';
+      try {
+        const res = await fetch(`${API}/db/careers`);
+        if (!res.ok) throw new Error(res.status);
+        const { jobs } = await res.json();
+        if (!jobs || !jobs.length) return;
+        const list = document.querySelector('.job-list');
+        if (!list) return;
+        const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+        list.innerHTML = jobs.map(j => `
+          <div class="job-card">
+            <div class="job-info">
+              <h3>${esc(j.title)}</h3>
+              <p>${esc(j.location)}${j.department ? ' · ' + esc(j.department) : ''}</p>
+            </div>
+            <div class="job-tag">${esc(j.emp_type || '')}</div>
+          </div>`).join('');
+      } catch (e) {
+        console.warn('[FLUX] Careers DB fetch failed — using static fallback:', e.message);
+      }
+    })();
+  </script>
+</body>
+
+</html>
