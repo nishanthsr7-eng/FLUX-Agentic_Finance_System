@@ -1,0 +1,646 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | FLUX</title>
+  <meta name="description"
+    content="FLUX sovereign financial dashboard — portfolio overview, spending analytics, and AI-powered insights.">
+  <meta property="og:title" content="Dashboard | FLUX Sovereign Finance">
+  <meta property="og:description"
+    content="Manage your portfolio with AI-optimized insights and secure biometric vaulting.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/dashboard.css?v=20260609d">
+</head>
+
+<body>
+  <!-- Skip-to-content for keyboard users -->
+  <a href="#dash-body" class="skip-link">Skip to main content</a>
+
+  <!-- Splash Screen Interstitial -->
+  <div class="splash-screen" id="splashScreen">
+    <div class="splash-logo">FLUX</div>
+    <div class="splash-loader"></div>
+  </div>
+
+  <div class="dash-layout">
+
+    <!-- ████ SIDEBAR ████ -->
+    <aside class="dash-sidebar">
+      <div class="sidebar-logo">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="2" aria-hidden="true">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+        FLUX
+      </div>
+
+      <nav class="nav-group" aria-label="Main Navigation">
+        <a href="dashboard.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+          </svg>
+          Overview
+        </a>
+        <a href="analysis.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+            <path d="M22 12A10 10 0 0 0 12 2v10z" />
+          </svg>
+          Analysis
+        </a>
+        <a href="marketplace.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M3 3v18h18" />
+            <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
+          </svg>
+          Marketplace
+        </a>
+        <a href="advisor.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
+          Smart Advisor
+        </a>
+        <a href="payments.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+            <line x1="1" y1="10" x2="23" y2="10" />
+          </svg>
+          Payments
+        </a>
+        <a href="#" class="nav-item" id="settingsNav">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+          Settings
+        </a>
+      </nav>
+
+      <a href="../index.html" class="nav-item logout-btn" style="margin-top: auto;" aria-label="Log Out">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        Sign Out
+      </a>
+    </aside>
+
+    <!-- ████ MAIN ████ -->
+    <main class="dash-main">
+      <header class="dash-header">
+        <h1 class="header-title" id="greetingHeader">Overview</h1>
+        <div class="user-profile" role="button" tabindex="0" aria-label="Edit profile">
+          <div class="user-info">
+            <div class="user-info-name">Nishanth S</div>
+            <div class="user-edit-hint">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit profile
+            </div>
+          </div>
+          <div class="avatar">NS</div>
+        </div>
+      </header>
+
+      <div class="dash-body" id="dash-body">
+
+        <!-- ══════════════════════════════
+           ROW 0 — DAILY BRIEFING
+      ═══════════════════════════════ -->
+        <div class="glass-card briefing-card" id="briefingCard">
+          <div class="briefing-inner">
+            <div class="briefing-left">
+              <div class="briefing-label">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Today's Briefing · <time id="briefingDate">—</time>
+                <span class="briefing-live" aria-hidden="true">
+                  <span class="briefing-live-dot" id="briefingLiveDot"></span>
+                  <span id="briefingLiveLabel">LIVE</span>
+                </span>
+              </div>
+              <div class="briefing-headline" id="briefingAction" aria-live="polite">Loading your daily market snapshot…</div>
+            </div>
+
+            <div class="briefing-movers" id="briefingMovers">
+              <!-- JS injected mover chips -->
+            </div>
+
+            <div class="briefing-portfolio">
+              <div class="briefing-port-label">Portfolio vs Yesterday</div>
+              <div class="briefing-port-val" id="briefingPortVal">—</div>
+              <div class="briefing-port-chg" id="briefingPortChg">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════
+           ROW 1 — PORTFOLIO HERO
+      ═══════════════════════════════ -->
+        <div class="hero-row">
+          <!-- Portfolio Hero (Reduced breadth) -->
+          <div class="glass-card portfolio-card">
+            <div class="card-header">
+              <span class="card-title">Portfolio Value</span>
+              <span class="tx-ai-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <polygon
+                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+                AI Optimized
+              </span>
+            </div>
+
+            <div class="portfolio-hero">
+              <div class="hero-left">
+                <div class="nw-label">Total Balance (INR)</div>
+                <div class="nw-value" id="netWorthValue">₹1,18,45,038</div>
+
+                <div class="portfolio-metrics">
+                  <div class="metric-item">
+                    <div class="metric-label">24h Change</div>
+                    <div class="metric-val positive">+2.4%</div>
+                  </div>
+                  <div class="metric-item">
+                    <div class="metric-label">Monthly</div>
+                    <div class="metric-val positive">+12.8%</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="hero-center">
+                <div class="nw-label">Net Savings (Month)</div>
+                <div class="portfolio-banks" id="heroNetSavings">—</div>
+              </div>
+
+              <!-- Risk Badge -->
+              <div class="risk-badge">
+                <div class="risk-ring">
+                  <span class="risk-score">84</span>
+                  <span class="risk-label">%</span>
+                </div>
+                <span class="risk-tag">Savings Score</span>
+              </div>
+            </div>
+
+            <div class="quick-actions-row">
+              <div class="quick-actions">
+                <button type="button" class="btn-action primary">Deposit</button>
+                <button type="button" class="btn-action">Send</button>
+                <button type="button" class="btn-action" id="historyBtn">History</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Extra Info: Asset Split / Wealth Health -->
+          <div class="glass-card wealth-health-card">
+            <div class="card-header">
+              <span class="card-title">Wealth Insights</span>
+              <span class="card-subtitle" id="insightPeriod"
+                style="font-size: 11px; opacity: 0.5; margin-left: auto;">OVERALL</span>
+            </div>
+
+            <div class="insight-list">
+              <div class="insight-item" id="chartInsightItem"
+                style="border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px; margin-bottom: 12px; display: none;">
+                <div class="insight-label" style="color: var(--accent-teal);">POINT-IN-TIME ANALYSIS</div>
+                <div class="insight-val" id="chartInsightText" style="font-size: 13px; line-height: 1.5; color: #fff;">
+                </div>
+              </div>
+
+              <div class="insight-item">
+                <div class="insight-label">Asset Allocation</div>
+                <div class="asset-bar-wrap">
+                  <div class="asset-bar" style="width: 45%; background: var(--accent-teal);" title="Stocks: 45%"></div>
+                  <div class="asset-bar" style="width: 30%; background: var(--accent-blue);" title="Crypto: 30%"></div>
+                  <div class="asset-bar" style="width: 25%; background: var(--accent-pink);" title="Cash: 25%"></div>
+                </div>
+                <div class="asset-legend">
+                  <span><i style="background: var(--accent-teal)"></i> Equity</span>
+                  <span><i style="background: var(--accent-blue)"></i> Crypto</span>
+                  <span><i style="background: var(--accent-pink)"></i> Cash</span>
+                </div>
+              </div>
+
+              <div class="insight-item secondary">
+                <div class="insight-label">Security Protocol</div>
+                <div class="security-status">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)"
+                    stroke-width="2" aria-hidden="true">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  <span>Vault Protection Active</span>
+                </div>
+              </div>
+
+              <div class="insight-item secondary">
+                <div class="insight-label">Next Milestone</div>
+                <div class="milestone-text" id="milestoneText">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════
+           ROW 2 — STAT CARDS
+      ═══════════════════════════════ -->
+        <div class="stats-row">
+          <div class="glass-card stat-card">
+            <div class="stat-icon" style="background: rgba(46,204,113,0.1); color: var(--accent-teal);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                <polyline points="17 6 23 6 23 12" />
+              </svg>
+            </div>
+            <div class="stat-card-label">Monthly Income</div>
+            <div class="stat-val" data-count="701350" data-prefix="₹">₹7,01,350</div>
+            <div class="stat-change up">↑ 3.1% vs last month</div>
+          </div>
+
+          <div class="glass-card stat-card">
+            <div class="stat-icon" style="background: rgba(224,86,253,0.1); color: var(--accent-pink);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+                <polyline points="17 18 23 18 23 12" />
+              </svg>
+            </div>
+            <div class="stat-card-label">Monthly Spend</div>
+            <div class="stat-val" data-count="171890" data-prefix="₹">₹1,71,890</div>
+            <div class="stat-change down">↑ 8.4% vs last month</div>
+          </div>
+
+          <div class="glass-card stat-card">
+            <div class="stat-icon" style="background: rgba(59,130,246,0.1); color: var(--accent-blue);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            </div>
+            <div class="stat-card-label">Invested (Total)</div>
+            <div class="stat-val" data-count="4280000" data-prefix="₹">₹42,80,000</div>
+            <div class="stat-change up">↑ 15.2% YTD</div>
+          </div>
+
+          <div class="glass-card stat-card">
+            <div class="stat-icon" style="background: rgba(243,156,18,0.1); color: #f39c12;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg>
+            </div>
+            <div class="stat-card-label">Net Savings</div>
+            <div class="stat-val" data-count="73397" data-prefix="₹">₹73,397</div>
+            <div class="stat-change up">↑ 4% vs last month</div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════
+           ROW 3 — REVENUE & CALENDAR
+      ═══════════════════════════════ -->
+        <div class="revenue-calendar-row">
+
+          <!-- Revenue / Bar Chart Card -->
+          <div class="glass-card revenue-card">
+            <div class="card-header">
+              <h2 class="revenue-title">Revenue</h2>
+              <div class="filter-tabs">
+                <button type="button" class="filter-tab" data-revenue-filter="weekly">Weekly</button>
+                <button type="button" class="filter-tab" data-revenue-filter="monthly">Monthly</button>
+                <button type="button" class="filter-tab active" data-revenue-filter="yearly">Yearly</button>
+                <button type="button" class="filter-tab" id="rangeBtn">Range</button>
+                <button type="button" class="filter-tab filter-icon-btn" id="filterBtn" aria-label="Chart filter options">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <line x1="4" y1="21" x2="4" y2="14" />
+                    <line x1="4" y1="10" x2="4" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="12" />
+                    <line x1="12" y1="8" x2="12" y2="3" />
+                    <line x1="20" y1="21" x2="20" y2="16" />
+                    <line x1="20" y1="12" x2="20" y2="3" />
+                    <line x1="1" y1="14" x2="7" y2="14" />
+                    <line x1="9" y1="8" x2="15" y2="8" />
+                    <line x1="17" y1="16" x2="23" y2="16" />
+                  </svg>
+                </button>
+
+                <!-- Range Popover -->
+                <div class="popover-card" id="rangePopover" role="menu" aria-label="Date range">
+                  <div class="popover-section-title" aria-hidden="true">Presets</div>
+                  <div class="popover-item" data-range="7d" role="menuitem" tabindex="0">Last 7 Days</div>
+                  <div class="popover-item" data-range="30d" role="menuitem" tabindex="0">Last 30 Days</div>
+                  <div class="popover-item active" data-range="ytd" role="menuitem" tabindex="0">Year to Date</div>
+                  <div class="popover-divider" role="separator"></div>
+                  <div class="popover-item" id="customRangeToggle" role="menuitem" tabindex="0">Custom Range…</div>
+                  <div id="customRangeInputs" style="display:none;padding:8px 0 2px;flex-direction:column;gap:8px;">
+                    <input type="date" id="customRangeFrom" class="tx-search" style="padding:6px 10px;font-size:12px;">
+                    <input type="date" id="customRangeTo" class="tx-search" style="padding:6px 10px;font-size:12px;">
+                    <button type="button" id="applyCustomRange" style="background:var(--accent-teal);color:#000;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">Apply</button>
+                  </div>
+                </div>
+
+                <!-- Filter Popover -->
+                <div class="popover-card" id="filterPopover" role="menu" aria-label="Chart filters">
+                  <div class="popover-section-title" aria-hidden="true">Currency</div>
+                  <div class="popover-item active" data-currency="INR" role="menuitem" tabindex="0">INR (₹)</div>
+                  <div class="popover-item" data-currency="USD" role="menuitem" tabindex="0">USD ($)</div>
+                  <div class="popover-divider" role="separator"></div>
+                  <div class="popover-section-title" aria-hidden="true">Metrics</div>
+                  <div class="popover-item" role="menuitem" tabindex="0">Expenses</div>
+                  <div class="popover-item" role="menuitem" tabindex="0">Net Income</div>
+                  <div class="popover-divider" role="separator"></div>
+                  <div class="popover-item" role="menuitem" tabindex="0" style="color: #ff4757;">Reset Filters</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="revenue-overview">
+              <div class="revenue-amount-box">
+                <span class="revenue-currency">₹</span>
+                <span class="revenue-value">23,37,695</span>
+                <span class="revenue-badge" id="revenueBadge" style="display:none"></span>
+                <span class="revenue-comparison">vs ₹20,15,240 last period</span>
+              </div>
+            </div>
+
+            <div class="revenue-chart-wrap">
+              <canvas id="revenueBarChart" role="img" aria-label="Revenue bar chart — values shown in tooltip on hover"></canvas>
+            </div>
+          </div>
+
+          <!-- Calendar Card -->
+          <div class="glass-card calendar-card">
+            <div class="calendar-header">
+              <button type="button" class="cal-nav-btn" id="prevMonth" aria-label="Previous month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg></button>
+              <span class="cal-month-title" id="calMonth">January, 2026</span>
+              <button type="button" class="cal-nav-btn" id="nextMonth" aria-label="Next month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg></button>
+            </div>
+
+            <div class="calendar-grid" id="calendarGrid">
+              <!-- JS Injected -->
+            </div>
+            <div class="cal-legend">
+              <span class="cal-legend-item"><span class="cal-dot" style="background:var(--accent-teal);opacity:1;display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;"></span>Today</span>
+              <span class="cal-legend-item"><span class="cal-dot" style="background:var(--accent-teal);opacity:0.35;display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;"></span>Activity</span>
+            </div>
+            <!-- Day detail popover -->
+            <div id="calDayDetail" class="cal-day-detail">
+              <div class="cal-day-detail-title" id="calDayDetailTitle"></div>
+              <div id="calDayDetailList"></div>
+            </div>
+
+            <div class="calendar-footer-stat">
+              <div class="cal-footer-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M12 20V10" />
+                  <path d="M18 20V4" />
+                  <path d="M6 20V16" />
+                </svg></div>
+              <div class="cal-footer-val">₹1,19,022</div>
+              <div class="cal-footer-badge">↑ 12.4%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════
+           ROW 4 — TRANSACTIONS + AI ALERTS
+      ═══════════════════════════════ -->
+        <div class="bottom-row">
+
+          <!-- Transactions -->
+          <div class="glass-card transactions-card">
+            <div class="card-header">
+              <span class="card-title">Live Transactions</span>
+              <a href="#" id="viewAllTransactions"
+                style="font-size: 13px; color: var(--accent-teal); text-decoration: none; font-weight: 500;">View All
+                →</a>
+            </div>
+
+            <div class="transaction-list" id="liveTransactionList">
+              <!-- Populated by dashboard.js → renderTransactionList() -->
+            </div>
+          </div>
+
+          <!-- Card & Account Manager -->
+          <div class="glass-card card-vault-card">
+            <div class="card-header">
+              <span class="card-title">Card Vault</span>
+              <div class="card-controls">
+                <!-- Color pickers removed -->
+                <button type="button" class="add-card-btn" id="freezeBtn" title="Freeze Card" aria-label="Freeze card" style="margin-right: 8px">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </button>
+                <button type="button" class="add-card-btn" id="addAccountBtn" title="Add Account" aria-label="Add account">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="card-manager-body">
+              <!-- Animated Card -->
+              <div class="card-perspective">
+                <div class="flux-credit-card teal active" id="mainCreditCard">
+                  <div class="card-frozen-mask">FROZEN</div>
+                  <div class="card-glass-shimmer"></div>
+                  <div class="card-brand">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)"
+                      stroke-width="2" aria-hidden="true">
+                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                    </svg>
+                    FLUX
+                  </div>
+                  <div class="card-chip"></div>
+                  <div class="card-number" id="cardNumber" data-real="•••• •••• •••• 8842"
+                    data-hidden="•••• •••• •••• 8842">•••• •••• •••• 8842</div>
+                  <div class="card-bottom">
+                    <div class="card-holder" id="cardHolder">NISHANTH S</div>
+                    <div class="card-expiry" id="cardExpiry" data-real="••/••" data-hidden="••/••">••/••</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Account List -->
+              <div class="account-mini-list" id="accountList">
+                <div class="acc-mini-item active">
+                  <div class="acc-mini-info">
+                    <div class="acc-mini-name">HDFC Platinum</div>
+                    <div class="acc-mini-val">₹4,20,000</div>
+                  </div>
+                  <div class="acc-mini-dot"></div>
+                </div>
+                <div class="acc-mini-item">
+                  <div class="acc-mini-info">
+                    <div class="acc-mini-name">ICICI Wealth</div>
+                    <div class="acc-mini-val">₹12,45,000</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div><!-- /card-vault-card -->
+        </div><!-- /bottom-row -->
+
+      </div><!-- /dash-body -->
+    </main>
+  </div>
+
+  <!-- Full Transactions Modal -->
+  <div id="txModal" class="tx-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="txModalTitle">
+    <div class="tx-modal-container">
+      <div class="tx-modal-header">
+        <div class="tx-modal-title-group">
+          <h2 class="tx-modal-title" id="txModalTitle">Transaction Ledger</h2>
+          <div class="tx-modal-subtitle">Full transaction history — search, filter and export your records</div>
+        </div>
+        <div class="tx-modal-actions">
+          <button type="button" class="modal-btn export-csv" id="exportCsvBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Export CSV
+          </button>
+          <button type="button" class="modal-btn export-pdf" id="exportPdfBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
+            Export PDF
+          </button>
+          <button type="button" class="modal-close-btn" id="closeTxModalBtn" aria-label="Close">&times;</button>
+        </div>
+      </div>
+      <div class="tx-modal-controls">
+        <input type="text" id="txSearch" class="tx-search" placeholder="Search by title…" autocomplete="off">
+        <select id="txCategoryFilter" class="tx-filter-select">
+          <option value="">All Categories</option>
+          <option value="income">Income</option>
+          <option value="investment">Investment</option>
+          <option value="essentials">Essentials</option>
+          <option value="subscription">Subscription</option>
+          <option value="lifestyle">Lifestyle</option>
+          <option value="business">Business</option>
+          <option value="transfer">Transfer</option>
+        </select>
+        <select id="txSort" class="tx-filter-select">
+          <option value="date-desc">Date (Newest)</option>
+          <option value="date-asc">Date (Oldest)</option>
+          <option value="amount-desc">Amount (High→Low)</option>
+          <option value="amount-asc">Amount (Low→High)</option>
+        </select>
+        <div class="tx-pagination" id="txPagination"></div>
+      </div>
+      <div class="tx-modal-body">
+        <div class="transaction-list" id="fullTransactionList">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Setup / Onboarding Modal -->
+  <div id="setupModal" class="tx-modal-overlay setup-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="setupModalTitle">
+    <div class="tx-modal-container setup-modal-container">
+      <div class="tx-modal-header">
+        <div class="tx-modal-title-group">
+          <h2 class="tx-modal-title" id="setupModalTitle">Set Up Your Account</h2>
+          <div class="tx-modal-subtitle">Tell FLUX about you so every panel reflects your real numbers.</div>
+        </div>
+        <div class="tx-modal-actions">
+          <button type="button" class="modal-close-btn" id="setupCloseBtn" aria-label="Close">&times;</button>
+        </div>
+      </div>
+
+      <div class="tx-modal-body setup-modal-body">
+        <!-- Profile -->
+        <section class="setup-section">
+          <div class="setup-section-title">Profile</div>
+          <div class="setup-grid setup-grid-2">
+            <label class="setup-field">
+              <span>Full Name</span>
+              <input type="text" id="setupName" class="setup-input" placeholder="e.g. Nishanth S" autocomplete="name">
+            </label>
+            <label class="setup-field">
+              <span>Preferred Currency</span>
+              <select id="setupCurrency" class="setup-input">
+                <option value="INR">INR (₹)</option>
+                <option value="USD">USD ($)</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <!-- Accounts -->
+        <section class="setup-section">
+          <div class="setup-section-title">
+            <span>Connected Accounts</span>
+            <button type="button" class="setup-add-btn" id="setupAddAccount">+ Add Account</button>
+          </div>
+          <div class="setup-acc-head">
+            <span>Account name</span><span>Balance</span><span>Card last 4</span><span>Expiry</span><span></span>
+          </div>
+          <div id="setupAccountRows"></div>
+        </section>
+
+        <!-- Portfolio -->
+        <section class="setup-section">
+          <div class="setup-section-title">
+            <span>Portfolio Allocation</span>
+            <span class="setup-alloc-sum" id="setupAllocSum">100%</span>
+          </div>
+          <div class="setup-grid setup-grid-3">
+            <label class="setup-field"><span>Equity %</span><input type="number" id="setupEquity" class="setup-input" min="0" max="100" value="45" autocomplete="off"></label>
+            <label class="setup-field"><span>Crypto %</span><input type="number" id="setupCrypto" class="setup-input" min="0" max="100" value="30" autocomplete="off"></label>
+            <label class="setup-field"><span>Cash %</span><input type="number" id="setupCash" class="setup-input" min="0" max="100" value="25" autocomplete="off"></label>
+          </div>
+          <label class="setup-field setup-field-full">
+            <span>Financial Goal — Net-Worth Target (₹)</span>
+            <input type="text" id="setupGoal" class="setup-input" inputmode="numeric" placeholder="e.g. 1,50,00,000" autocomplete="off">
+          </label>
+        </section>
+      </div>
+
+      <div class="setup-modal-footer">
+        <div class="setup-error" id="setupError"></div>
+        <button type="button" class="modal-btn setup-skip-btn" id="setupSkipBtn" style="display:none">Skip for now</button>
+        <button type="button" class="modal-btn setup-save-btn" id="setupSaveBtn">Save &amp; Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/flux-data.js?v=20260609d"></script>
+  <script src="../js/seed.js?v=20260609d"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <!-- Toast System -->
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="../js/dashboard.js?v=20260609d"></script>
+  <script src="../js/account-setup.js?v=20260609d"></script>
+</body>
+
+</html>

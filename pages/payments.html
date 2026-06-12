@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payments | FLUX</title>
+  <meta name="description" content="Secure payments and app redirects via FLUX Agentic Finance.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <style>
+    /* ── Payments layout ── */
+    .payments-layout {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 24px;
+      margin-top: 24px;
+      min-height: calc(100vh - 140px);
+    }
+
+    .dash-col-left,
+    .dash-col-right {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .limit-card {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 18px 22px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+
+    .source-header-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 18px;
+      margin-bottom: 0;
+      align-items: stretch;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .active-source-section {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .major-source-card {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(46, 204, 113, 0.1) 0%, rgba(10, 10, 10, 0.6) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 18px 22px;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .major-source-card:hover {
+      transform: translateY(-5px) scale(1.02);
+      border-color: var(--accent-teal);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(46, 204, 113, 0.1);
+    }
+
+    .card-shimmer {
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 200%;
+      height: 100%;
+      background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+      animation: shimmer 4s infinite;
+    }
+
+    @keyframes shimmer {
+      100% { left: 100%; }
+    }
+
+    .source-label {
+      font-size: 11px;
+      opacity: 0.6;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .source-bank {
+      font-size: 20px;
+      font-weight: 700;
+      margin-top: 4px;
+      font-family: var(--font-serif);
+    }
+
+    .source-stats {
+      display: flex;
+      gap: 24px;
+      margin-top: 14px;
+    }
+
+    .s-stat { display: flex; flex-direction: column; gap: 4px; }
+    .s-stat-label { font-size: 10px; opacity: 0.5; }
+    .s-stat-val { font-size: 16px; font-weight: 600; }
+
+    .change-source-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 8px 16px;
+      border-radius: 30px;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .change-source-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .protocol-card {
+      padding: 16px 22px;
+      background: rgba(10, 10, 10, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .protocol-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .protocol-info { display: flex; align-items: center; gap: 12px; }
+
+    .protocol-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-teal);
+    }
+
+    /* Unified Payment Hub takes the remaining space in the left column */
+    .agentic-terminal {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      margin-bottom: 0 !important;
+    }
+
+    .agentic-terminal .card-header { margin-bottom: 12px; flex-shrink: 0; }
+
+    .agentic-terminal .terminal-container {
+      flex: 1;
+      min-height: 0;
+      align-items: center;
+    }
+
+    .agentic-terminal .terminal-footer { flex-shrink: 0; }
+
+    .p-toggle {
+      width: 36px;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.3s;
+      flex-shrink: 0;
+      padding: 0;
+      border: none;
+    }
+
+    .p-toggle.active {
+      background: var(--accent-teal);
+      box-shadow: 0 0 15px var(--accent-teal-glow);
+    }
+
+    .p-toggle::after {
+      content: '';
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 14px;
+      height: 14px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.3s, background 0.3s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .p-toggle.active::after { transform: translateX(16px); }
+
+    /* App shortcut tiles */
+    .app-card {
+      background: rgba(10, 10, 10, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 24px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .app-card:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--accent-teal);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .app-card img {
+      max-width: 100%;
+      max-height: 24px;
+      object-fit: contain;
+      transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .app-card:hover img { transform: scale(1.1); }
+
+    /* Scan to Pay terminal */
+    .viewfinder {
+      width: 140px;
+      height: 140px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 24px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(4px);
+      cursor: pointer;
+    }
+
+    /* Separate clipping layer for the video feed so the corner
+       brackets (which sit slightly outside the box) aren't cut off */
+    .viewfinder-frame {
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      overflow: hidden;
+    }
+
+    .viewfinder video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .corner { position: absolute; width: 24px; height: 24px; border: 3px solid var(--accent-teal); z-index: 3; }
+    .corner.tl { top: -2px; left: -2px; border-right: none; border-bottom: none; border-top-left-radius: 12px; }
+    .corner.tr { top: -2px; right: -2px; border-left: none; border-bottom: none; border-top-right-radius: 12px; }
+    .corner.bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-bottom-left-radius: 12px; }
+    .corner.br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-bottom-right-radius: 12px; }
+
+    .scanline {
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background: var(--accent-teal);
+      box-shadow: 0 0 15px var(--accent-teal);
+      top: 0;
+      animation: scan 3s ease-in-out infinite;
+      z-index: 2;
+    }
+    .viewfinder.scanning .scanline { display: none; }
+
+    @keyframes scan {
+      0%, 100% { top: 5%; opacity: 0; }
+      10%, 90% { opacity: 1; }
+      50% { top: 95%; }
+    }
+
+    .scan-status { font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-teal);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent-teal);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.8); opacity: 0.5; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(0.8); opacity: 0.5; }
+    }
+
+    .upload-qr-btn:hover {
+      background: rgba(255, 255, 255, 0.1) !important;
+      color: #fff !important;
+      transform: translateY(-2px);
+    }
+
+    /* FLUX terminal inputs */
+    .flux-terminal-body { display: flex; flex-direction: column; gap: 14px; margin-top: 0; justify-content: center; }
+
+    .transfer-input-field {
+      padding: 11px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .transfer-input-field:focus-within {
+      border-color: var(--accent-teal);
+      background: rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 15px rgba(46, 204, 113, 0.1);
+    }
+
+    .t-label { font-size: 10px; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .t-amount-wrap { display: flex; align-items: baseline; gap: 10px; }
+    .t-curr { font-size: 20px; color: var(--text-secondary); font-family: var(--font-serif); }
+
+    .t-amount-input {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 26px;
+      font-family: var(--font-serif);
+      font-weight: 700;
+      width: 100%;
+      outline: none;
+    }
+
+    .t-address-input {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      width: 100%;
+      outline: none;
+      margin-top: 4px;
+    }
+
+    /* Bills + contacts */
+    .upcoming-bills { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+
+    .bill-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .bill-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.1);
+      transform: scale(1.01);
+    }
+
+    .bill-info { display: flex; align-items: center; gap: 12px; }
+
+    .bill-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .bill-details { display: flex; flex-direction: column; gap: 2px; }
+    .bill-title { font-size: 13px; font-weight: 600; }
+    .bill-date { font-size: 11px; color: var(--text-secondary); }
+    .bill-amount { font-size: 13px; font-weight: 700; color: var(--accent-teal); }
+
+    .quick-move-contacts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .contact-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .contact-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.3s;
+    }
+
+    .contact-item:hover .contact-avatar {
+      border-color: var(--accent-teal);
+      transform: scale(1.05);
+      background: rgba(46, 204, 113, 0.1);
+    }
+
+    .contact-item:active .contact-avatar { transform: scale(0.9); }
+    .contact-name { font-size: 11px; color: var(--text-secondary); }
+
+    /* Interaction states */
+    .btn-action { transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1); cursor: pointer; }
+
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.08) !important;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-action:active { transform: translateY(0); filter: brightness(0.9); }
+
+    .btn-action.primary:hover {
+      background: rgba(46, 204, 113, 0.1) !important;
+      border-color: var(--accent-teal) !important;
+      box-shadow: 0 0 20px rgba(46, 204, 113, 0.2);
+    }
+
+    .reward-item { transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1) !important; }
+
+    .reward-item:hover {
+      transform: translateX(5px);
+      background: rgba(255, 255, 255, 0.07) !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
+    }
+
+    .reward-item.claimed { opacity: 0.55; filter: grayscale(0.5); }
+    .reward-item.claiming { animation: pulse-border 1s infinite; }
+
+    @keyframes pulse-border {
+      0% { border-color: rgba(255, 255, 255, 0.05); }
+      50% { border-color: var(--accent-teal); }
+      100% { border-color: rgba(255, 255, 255, 0.05); }
+    }
+
+    /* Empty states */
+    .empty-state {
+      padding: 24px 16px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+      opacity: 0.7;
+    }
+
+    /* Visually-hidden (screen-reader only) — NOT display:none, so SRs read it */
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Keyboard focus visibility for the custom controls */
+    .p-toggle:focus-visible,
+    .contact-item:focus-visible,
+    .app-card:focus-visible,
+    .reward-item:focus-visible,
+    .bill-item:focus-visible,
+    .major-source-card:focus-visible,
+    .viewfinder:focus-visible {
+      outline: 2px solid var(--accent-teal);
+      outline-offset: 3px;
+    }
+
+    /* ── Desktop: keep every container within one screen, scroll lists internally ── */
+    @media (min-width: 1025px) {
+      .payments-layout {
+        height: calc(100vh - 140px);
+        max-height: calc(100vh - 140px);
+      }
+
+      .dash-col-left,
+      .dash-col-right {
+        height: 100%;
+        min-height: 0;
+      }
+
+      /* Right-column cards split the available height evenly */
+      .dash-col-right .glass-card {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+        margin-bottom: 0 !important;
+      }
+      .dash-col-right .glass-card .card-header { flex-shrink: 0; }
+
+      #upcomingBills,
+      .rewards-box,
+      .quick-move-contacts {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+      }
+      #upcomingBills::-webkit-scrollbar,
+      .rewards-box::-webkit-scrollbar,
+      .quick-move-contacts::-webkit-scrollbar {
+        width: 4px;
+      }
+      #upcomingBills::-webkit-scrollbar-thumb,
+      .rewards-box::-webkit-scrollbar-thumb,
+      .quick-move-contacts::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 4px;
+      }
+
+      #upcomingBills,
+      .rewards-box {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding-right: 4px;
+      }
+
+      /* Send-to-contact card: search box fixed, contacts scroll in one row,
+         quick-pay redirects stay pinned to the bottom */
+      .dash-col-right .glass-card:nth-child(2) {
+        padding-bottom: 16px;
+      }
+      .quick-move-contacts {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        align-content: flex-start;
+      }
+      .redirects-footer { flex-shrink: 0; }
+    }
+
+    /* ── Mobile responsiveness (unchanged) ── */
+    @media (max-width: 1024px) {
+      .dash-layout { flex-direction: column !important; }
+      .dash-sidebar {
+        width: 100% !important;
+        padding: 20px !important;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .nav-group { flex-direction: row !important; overflow-x: auto !important; padding-bottom: 15px !important; gap: 12px !important; }
+      .nav-item { white-space: nowrap !important; flex-shrink: 0; }
+      .payments-layout { grid-template-columns: 1fr !important; width: 100% !important; display: flex !important; flex-direction: column !important; }
+      .dash-col-right { order: 2; }
+      .source-header-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .source-header-grid { grid-template-columns: 1fr !important; }
+      .terminal-container { grid-template-columns: 1fr !important; gap: 32px !important; padding: 16px !important; }
+      .flux-terminal-body { border-right: none !important; padding-right: 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 32px; }
+      .dash-header { padding: 16px 20px !important; }
+      .dash-body { padding: 24px 16px !important; width: 100% !important; overflow-x: hidden !important; }
+      .quick-move-contacts { grid-template-columns: repeat(3, 1fr) !important; }
+      .glass-card { padding: 20px !important; }
+    }
+
+    @media (max-width: 480px) {
+      .source-bank { font-size: 18px !important; }
+      .t-amount-input { font-size: 24px !important; }
+      .terminal-footer { flex-direction: column !important; gap: 20px !important; align-items: center !important; }
+      .terminal-actions { width: 100% !important; display: flex !important; overflow-x: auto !important; gap: 12px !important; padding-bottom: 12px !important; justify-content: flex-start !important; }
+      .terminal-actions .btn-action { white-space: nowrap !important; padding: 10px 18px !important; }
+      .security-badge { width: 100% !important; justify-content: center !important; }
+      .quick-move-contacts { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+
+    /* ── Modals ── */
+    .flux-modal-backdrop {
+      display: none; position: fixed; inset: 0; z-index: 9000;
+      background: rgba(0,0,0,.65); backdrop-filter: blur(8px);
+      align-items: center; justify-content: center;
+    }
+    .flux-modal-backdrop.show { display: flex; }
+    .flux-modal {
+      background: #0f0f12; border: 1px solid rgba(255,255,255,.1);
+      border-radius: 20px; padding: 32px; width: 400px; max-width: 92vw;
+      box-shadow: 0 24px 64px rgba(0,0,0,.7);
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .flux-modal-title {
+      font-size: 13px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--accent-teal);
+    }
+    .flux-modal label {
+      display: flex; flex-direction: column; gap: 6px;
+      font-size: 11px; font-weight: 600; color: rgba(255,255,255,.45);
+      text-transform: uppercase; letter-spacing: .8px;
+    }
+    .flux-modal input, .flux-modal select {
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 10px; padding: 11px 14px; color: #d2d2d2;
+      font-size: 13px; outline: none; transition: border-color .2s;
+      font-family: inherit;
+    }
+    .flux-modal input:focus, .flux-modal select:focus { border-color: var(--accent-teal); }
+    .flux-modal select option { background: #0f0f12; }
+    .flux-modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .flux-modal-actions { display: flex; gap: 10px; margin-top: 4px; }
+    .flux-modal-submit {
+      flex: 1; background: var(--accent-teal); color: #000; border: none;
+      border-radius: 10px; padding: 13px; font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: opacity .2s;
+    }
+    .flux-modal-submit:hover { opacity: .85; }
+    .flux-modal-submit:disabled { opacity: .4; cursor: not-allowed; }
+    .flux-modal-cancel {
+      padding: 13px 20px; background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1); border-radius: 10px;
+      color: rgba(255,255,255,.5); font-size: 13px; cursor: pointer;
+    }
+    .flux-modal-cancel:hover { background: rgba(255,255,255,.08); }
+
+    /* Confirm-payment summary */
+    .confirm-summary {
+      display: flex; flex-direction: column; gap: 10px;
+      padding: 16px; border-radius: 12px;
+      background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
+    }
+    .confirm-row { display: flex; justify-content: space-between; font-size: 13px; }
+    .confirm-row .lbl { color: rgba(255,255,255,.45); }
+    .confirm-row .val { color: #fff; font-weight: 600; }
+    .confirm-amount { font-size: 28px; font-weight: 700; font-family: var(--font-serif); color: var(--accent-teal); text-align: center; }
+
+    /* Account switcher list */
+    .acct-option {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 16px; border-radius: 12px; cursor: pointer;
+      background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
+      transition: all .2s;
+    }
+    .acct-option:hover { border-color: var(--accent-teal); background: rgba(46,204,113,.06); }
+    .acct-option.active { border-color: var(--accent-teal); }
+    .acct-option:focus-visible { outline: 2px solid var(--accent-teal); outline-offset: 2px; }
+    .acct-option .a-name { font-size: 14px; font-weight: 600; }
+    .acct-option .a-meta { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    .acct-option .a-check { color: var(--accent-teal); opacity: 0; }
+    .acct-option.active .a-check { opacity: 1; }
+  </style>
+</head>
+
+<body>
+  <div class="dash-layout">
+
+    <!-- ████ SIDEBAR ████ -->
+    <aside class="dash-sidebar">
+      <div class="sidebar-logo">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="2" aria-hidden="true">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+        FLUX
+      </div>
+
+      <nav class="nav-group" aria-label="Primary">
+        <a href="dashboard.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+          </svg> Overview
+        </a>
+        <a href="analysis.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+            <path d="M22 12A10 10 0 0 0 12 2v10z" />
+          </svg> Analysis
+        </a>
+        <a href="marketplace.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg> Marketplace
+        </a>
+        <a href="advisor.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 16v-4M12 8h.01" />
+          </svg> Smart Advisor
+        </a>
+        <a href="payments.html" class="nav-item active" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+            <line x1="1" y1="10" x2="23" y2="10" />
+          </svg> Payments
+        </a>
+        <a href="#" class="nav-item" id="settingsNav">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg> Settings
+        </a>
+      </nav>
+
+      <a href="../index.html" class="nav-item logout-btn" style="margin-top: auto;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg> Sign Out
+      </a>
+    </aside>
+
+    <!-- ████ MAIN ████ -->
+    <main class="dash-main">
+      <header class="dash-header">
+        <h1 class="header-title">Payments</h1>
+        <div class="user-profile">
+          <div class="user-info">
+            <div class="user-info-name" id="hdrName">FLUX User</div>
+          </div>
+          <div class="avatar" id="hdrAvatar">FX</div>
+        </div>
+      </header>
+
+      <div class="dash-body">
+
+        <div class="payments-layout">
+
+          <!-- LEFT: Active source & payment hub -->
+          <div class="dash-col-left">
+
+            <div class="source-header-grid">
+              <div class="active-source-section">
+                <div class="major-source-card" id="sourceCard" tabindex="0" role="group" aria-label="Primary payment source">
+                  <div class="card-shimmer" aria-hidden="true"></div>
+                  <div class="source-label">Primary Source</div>
+                  <div class="source-bank" id="sourceBank">—</div>
+                  <div class="source-stats">
+                    <div class="s-stat">
+                      <div class="s-stat-label" id="sourceStatLabel">Available</div>
+                      <div class="s-stat-val" id="sourceStatVal">—</div>
+                    </div>
+                    <div class="s-stat">
+                      <div class="s-stat-label">Card</div>
+                      <div class="s-stat-val" id="sourceCardNum">—</div>
+                    </div>
+                  </div>
+                </div>
+
+                <button class="change-source-btn" id="showOtherCardsBtn" type="button" aria-label="Change payment account">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                  Change Account
+                </button>
+              </div>
+
+              <div class="protocol-card">
+                <div class="source-label">Security Settings</div>
+                <div class="protocol-item">
+                  <div class="protocol-info">
+                    <div class="protocol-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                      </svg></div>
+                    <div style="font-size: 13px; font-weight: 500;">Two-Factor Authentication</div>
+                  </div>
+                  <button class="p-toggle" type="button" role="switch" aria-checked="false" aria-label="Two-Factor Authentication"></button>
+                </div>
+                <div class="protocol-item">
+                  <div class="protocol-info">
+                    <div class="protocol-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 11c0-1.66-1.34-3-3-3s-3 1.34-3 3M2 12a10 10 0 0 1 20 0M12 16v.01"></path>
+                      </svg></div>
+                    <div style="font-size: 13px; font-weight: 500;">Biometric Unlock</div>
+                  </div>
+                  <button class="p-toggle" type="button" role="switch" aria-checked="false" aria-label="Biometric Unlock"></button>
+                </div>
+                <div class="protocol-item">
+                  <div class="protocol-info">
+                    <div class="protocol-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"></path>
+                      </svg></div>
+                    <div style="font-size: 13px; font-weight: 500;">Transaction Alerts</div>
+                  </div>
+                  <button class="p-toggle" type="button" role="switch" aria-checked="false" aria-label="Transaction Alerts"></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Unified Payment Hub -->
+            <div class="glass-card agentic-terminal">
+              <div class="card-header">
+                <div class="card-title">Unified Payment Hub</div>
+                <div class="tx-ai-label" style="background: rgba(46,204,113,0.1); color: var(--accent-teal);">
+                  Secure</div>
+              </div>
+
+              <div class="terminal-container"
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 14px;">
+                <!-- Native FLUX Transfer -->
+                <div class="flux-terminal-body"
+                  style="border-right: 1px solid rgba(255,255,255,0.05); padding-right: 20px;">
+                  <div class="transfer-input-field">
+                    <label for="stream-amount" class="t-label">Amount</label>
+                    <div class="t-amount-wrap">
+                      <span class="t-curr" aria-hidden="true">₹</span>
+                      <input type="text" id="stream-amount" class="t-amount-input" inputmode="decimal"
+                        autocomplete="off" placeholder="0.00">
+                    </div>
+                  </div>
+
+                  <div class="transfer-input-field">
+                    <label for="target-id" class="t-label">Recipient (FLUX ID / UPI)</label>
+                    <input type="text" id="target-id" class="t-address-input" autocomplete="off"
+                      placeholder="name@flux or name@bank" style="margin-top: 4px;">
+                  </div>
+
+                  <button class="btn-action primary" id="transmitBtn" type="button"
+                    style="width: 100%; padding: 13px; font-weight: 600; font-size: 14px; margin-top: 4px; border-radius: 14px; background: rgba(46,204,113,0.05); border: 1.5px solid rgba(46,204,113,0.3); color: var(--accent-teal); letter-spacing: 0.3px;">
+                    Send
+                  </button>
+                </div>
+
+                <!-- Scan to Pay -->
+                <div class="scanner-body"
+                  style="display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+                  <div class="viewfinder" id="viewfinder" tabindex="0" role="button"
+                    aria-label="Scan a QR code with your camera">
+                    <div class="viewfinder-frame">
+                      <video id="scanVideo" playsinline muted></video>
+                    </div>
+                    <div class="corner tl"></div>
+                    <div class="corner tr"></div>
+                    <div class="corner bl"></div>
+                    <div class="corner br"></div>
+                    <div class="scanline" aria-hidden="true"></div>
+
+                    <!-- Camera Controls -->
+                    <div class="camera-controls"
+                      style="position: absolute; bottom: -10px; z-index: 4; display: flex; gap: 12px; background: rgba(0,0,0,0.6); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(8px);">
+                      <button class="cam-ctrl" id="camSwitch" type="button" title="Switch camera" aria-label="Switch camera"
+                        style="cursor: pointer; opacity: 0.8; background:none; border:none; color:inherit; padding:0;"><svg width="14" height="14" viewBox="0 0 24 24"
+                          fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                          <path d="M23 4v6h-6"></path>
+                          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg></button>
+                      <button class="cam-ctrl" id="camFlash" type="button" title="Toggle flash" aria-label="Toggle flash"
+                        style="cursor: pointer; opacity: 0.8; color: var(--accent-teal); background:none; border:none; padding:0;"><svg width="14" height="14"
+                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                        </svg></button>
+                    </div>
+                  </div>
+                  <div class="scanner-meta" style="margin-top: 16px; text-align: center;">
+                    <div class="scan-status" style="font-size: 11px; opacity: 0.7;"><span class="pulse-dot" aria-hidden="true"></span>
+                      <span id="scanStatusText">Tap to scan a QR</span></div>
+                    <input type="file" id="qrFileInput" accept="image/*" class="sr-only" aria-hidden="true">
+                    <button class="upload-qr-btn" id="uploadQrBtn" type="button"
+                      style="margin-top: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 7px 14px; border-radius: 20px; color: var(--text-secondary); font-size: 11px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                      Upload QR from Device
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Terminal Footer: Quick Actions & Security -->
+              <div class="terminal-footer"
+                style="padding: 12px 18px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.1); border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;">
+                <div class="terminal-actions" style="display: flex; gap: 10px;">
+                  <button class="btn-action" type="button" id="requestActionBtn"
+                    style="padding: 10px 18px; font-size: 12px; font-weight: 500; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px;">Request</button>
+                  <button class="btn-action" type="button" id="splitActionBtn"
+                    style="padding: 10px 18px; font-size: 12px; font-weight: 500; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px;">Split
+                    Bill</button>
+                  <button class="btn-action" type="button" id="recurringActionBtn"
+                    style="padding: 10px 18px; font-size: 12px; font-weight: 500; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px;">Recurring</button>
+                </div>
+                <div class="security-badge"
+                  style="display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--accent-teal); opacity: 0.8; letter-spacing: 0.5px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  PIN-AUTHORIZED PAYMENTS
+                </div>
+              </div>
+            </div>
+
+            <!-- Monthly spending headroom -->
+            <div class="limit-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                  <div style="font-size: 11px; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px;">Monthly
+                    Headroom</div>
+                  <div style="font-size: 16px; font-weight: 600; color: #fff; margin-top: 4px;">Discretionary Spending</div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 16px; font-weight: 700; color: var(--accent-teal);" id="gaugeRemaining">—</div>
+                  <div style="font-size: 11px; opacity: 0.5;">Remaining</div>
+                </div>
+              </div>
+              <div class="limit-gauge-wrap">
+                <div class="gauge-base"
+                  style="height: 6px; width: 100%; background: rgba(0,0,0,0.3); border-radius: 3px; overflow: hidden; position: relative;">
+                  <div class="gauge-fill" id="gaugeFill"
+                    style="position: absolute; top:0; left:0; height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-teal), var(--accent-blue)); box-shadow: 0 0 10px rgba(46,204,113,0.3); transition: width .6s cubic-bezier(0.23,1,0.32,1);">
+                  </div>
+                </div>
+                <div class="limit-meta"
+                  style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 11px; opacity: 0.6;">
+                  <div id="gaugeUtil">Utilization: —</div>
+                  <div id="gaugeRefresh">Refreshes in — days</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT: Bills, contacts & rewards -->
+          <div class="dash-col-right">
+
+            <div class="glass-card" style="margin-bottom: 24px;">
+              <div class="card-header">
+                <span class="card-title">Upcoming Settlements</span>
+              </div>
+              <div class="upcoming-bills" id="upcomingBills">
+                <div class="empty-state">Loading upcoming bills…</div>
+              </div>
+            </div>
+
+            <!-- Send to contact + express redirects -->
+            <div class="glass-card" style="flex: 1; display: flex; flex-direction: column;">
+              <div class="card-header" style="padding-bottom: 16px;">
+                <span class="card-title">Send to Contact</span>
+              </div>
+
+              <div class="transfer-input-field" style="margin: 0 20px 20px 20px;">
+                <label for="contact-search" class="sr-only">Search contacts</label>
+                <input type="text" id="contact-search" class="t-address-input" autocomplete="off" placeholder="Search Contacts">
+              </div>
+
+
+              <!-- Express app redirects (UPI deep links) -->
+              <div class="redirects-footer" style="padding: 14px 20px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto;">
+                <div class="source-label" style="margin-bottom: 12px;">Quick Pay Redirects</div>
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
+                  <div class="app-card" data-app="gpay" role="button" tabindex="0" style="padding: 10px; border-radius: 12px;" title="Pay via Google Pay" aria-label="Pay via Google Pay">
+                    <img src="../assets/icons/payments/gpay.svg" alt="" aria-hidden="true">
+                  </div>
+                  <div class="app-card" data-app="phonepe" role="button" tabindex="0" style="padding: 10px; border-radius: 12px;" title="Pay via PhonePe" aria-label="Pay via PhonePe">
+                    <img src="../assets/icons/payments/phonepe.svg" alt="" aria-hidden="true">
+                  </div>
+                  <div class="app-card" data-app="paytm" role="button" tabindex="0" style="padding: 10px; border-radius: 12px;" title="Pay via Paytm" aria-label="Pay via Paytm">
+                    <img src="../assets/icons/payments/paytm.svg" alt="" aria-hidden="true">
+                  </div>
+                  <div class="app-card" data-app="amazonpay" role="button" tabindex="0" style="padding: 10px; border-radius: 12px;" title="Pay via Amazon Pay" aria-label="Pay via Amazon Pay">
+                    <img src="../assets/icons/payments/amazonpay.svg" alt="" aria-hidden="true">
+                  </div>
+                  <div class="app-card" data-app="applepay" role="button" tabindex="0" style="padding: 10px; border-radius: 12px;" title="Apple Pay" aria-label="Apple Pay">
+                    <img src="../assets/icons/payments/applepay.svg" alt="" aria-hidden="true">
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Flux Rewards -->
+            <div class="glass-card" style="flex: 1;">
+              <div class="card-header">
+                <span class="card-title">Flux Rewards</span>
+                <span class="view-all" id="rewardsTotal" style="font-size: 11px; color: var(--accent-teal);">—</span>
+              </div>
+              <div class="rewards-box" id="rewardsBox" style="margin-top: 16px; display: flex; flex-direction: column; gap: 10px;">
+                <div class="empty-state">Loading rewards…</div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast region (app-standard, aria-live) -->
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="false"></div>
+
+  <!-- ── Modals ─────────────────────────────────────────────────────────── -->
+
+  <!-- Confirm Payment -->
+  <div class="flux-modal-backdrop" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="flux-modal">
+      <div class="flux-modal-title" id="confirmTitle">Authorize Payment</div>
+      <div class="confirm-amount" id="confirmAmount">₹0</div>
+      <div class="confirm-summary">
+        <div class="confirm-row"><span class="lbl">To</span><span class="val" id="confirmTo">—</span></div>
+        <div class="confirm-row"><span class="lbl">From</span><span class="val" id="confirmFrom">—</span></div>
+      </div>
+      <label>FLUX PIN (4–6 digits)
+        <input id="confirmPin" type="password" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="••••">
+      </label>
+      <div class="flux-modal-actions">
+        <button class="flux-modal-submit" id="confirmAuthorizeBtn" type="button">Authorize</button>
+        <button class="flux-modal-cancel" type="button" data-close="confirmModal">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account switcher -->
+  <div class="flux-modal-backdrop" id="accountModal" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+    <div class="flux-modal">
+      <div class="flux-modal-title" id="accountTitle">Choose Source Account</div>
+      <div id="accountList" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <div class="flux-modal-actions">
+        <button class="flux-modal-cancel" type="button" data-close="accountModal" style="flex:1;text-align:center;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Request Money -->
+  <div class="flux-modal-backdrop" id="requestModal" role="dialog" aria-modal="true" aria-labelledby="requestModalTitle">
+    <div class="flux-modal">
+      <div class="flux-modal-title" id="requestModalTitle">Request Payment</div>
+      <label>From (Contact / FLUX ID)
+        <input id="requestFrom" type="text" autocomplete="off" placeholder="e.g. Alex or alex@flux">
+      </label>
+      <label>Amount (₹)
+        <input id="requestAmount" type="number" min="1" inputmode="decimal" placeholder="0">
+      </label>
+      <label>Note (optional)
+        <input id="requestNote" type="text" autocomplete="off" placeholder="e.g. Dinner split">
+      </label>
+      <div class="flux-modal-actions">
+        <button class="flux-modal-submit" id="requestSubmitBtn" type="button">Send Request</button>
+        <button class="flux-modal-cancel" type="button" data-close="requestModal">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Split Bill -->
+  <div class="flux-modal-backdrop" id="splitModal" role="dialog" aria-modal="true" aria-labelledby="splitModalTitle">
+    <div class="flux-modal">
+      <div class="flux-modal-title" id="splitModalTitle">Split Bill</div>
+      <label>Description
+        <input id="splitDesc" type="text" autocomplete="off" placeholder="e.g. Dinner at Taj Bistro">
+      </label>
+      <div class="flux-modal-row">
+        <label>Total Amount (₹)
+          <input id="splitTotal" type="number" min="1" inputmode="decimal" placeholder="0">
+        </label>
+        <label>Split Between
+          <input id="splitPeople" type="number" min="2" max="20" value="2" placeholder="2">
+        </label>
+      </div>
+      <div id="splitPreview" style="font-size:12px;color:var(--accent-teal);font-weight:600;text-align:center;padding:8px;background:rgba(0,229,160,.06);border-radius:8px;display:none;">
+        Your share: —
+      </div>
+      <div class="flux-modal-actions">
+        <button class="flux-modal-submit" id="splitSubmitBtn" type="button">Record My Share</button>
+        <button class="flux-modal-cancel" type="button" data-close="splitModal">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Recurring -->
+  <div class="flux-modal-backdrop" id="recurringModal" role="dialog" aria-modal="true" aria-labelledby="recurringModalTitle">
+    <div class="flux-modal">
+      <div class="flux-modal-title" id="recurringModalTitle">Add Recurring Bill</div>
+      <label>Title
+        <input id="recurringTitle" type="text" autocomplete="off" placeholder="e.g. Gym Membership">
+      </label>
+      <div class="flux-modal-row">
+        <label>Amount (₹)
+          <input id="recurringAmount" type="number" min="1" inputmode="decimal" placeholder="0">
+        </label>
+        <label>Due Day of Month
+          <input id="recurringDay" type="number" min="1" max="31" placeholder="1–31">
+        </label>
+      </div>
+      <label>Category
+        <select id="recurringCategory">
+          <option value="essentials">Essentials</option>
+          <option value="subscription">Subscription</option>
+          <option value="lifestyle">Lifestyle</option>
+          <option value="business">Business</option>
+          <option value="investment">Investment</option>
+        </select>
+      </label>
+      <div class="flux-modal-actions">
+        <button class="flux-modal-submit" id="recurringSubmitBtn" type="button">Add Recurring</button>
+        <button class="flux-modal-cancel" type="button" data-close="recurringModal">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/flux-data.js"></script>
+  <script src="../js/seed.js"></script>
+  <script src="../js/payments.js"></script>
+
+</body>
+
+</html>

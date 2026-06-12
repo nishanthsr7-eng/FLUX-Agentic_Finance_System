@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="FLUX Analysis — live market charts, portfolio P&L, spending intelligence and strategy backtesting.">
+  <meta name="theme-color" content="#08080a">
+  <!-- CSP: no inline/eval scripts (all JS is external since the §refactor).
+       'unsafe-inline' remains for STYLE only — the markup still uses style=""
+       attributes. connect-src lists the dev API; same-origin covers prod. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:8000 http://127.0.0.1:8000; base-uri 'self'; form-action 'self'; object-src 'none'">
+  <title>Analysis | FLUX</title>
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300e5a0' stroke-width='2'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=JetBrains+Mono:wght@300;400;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+
+  <link rel="stylesheet" href="../css/analysis.css">
+</head>
+
+<body>
+  <div class="dash-layout">
+
+    <!-- ████ ORIGINAL SIDEBAR — UNTOUCHED ████ -->
+    <aside class="dash-sidebar">
+      <div class="sidebar-logo">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="2">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+        FLUX
+      </div>
+      <nav class="nav-group">
+        <a href="dashboard.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+          </svg> Overview
+        </a>
+        <a href="analysis.html" class="nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+            <path d="M22 12A10 10 0 0 0 12 2v10z" />
+          </svg> Analysis
+        </a>
+        <a href="marketplace.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg> Marketplace
+        </a>
+        <a href="advisor.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 16v-4M12 8h.01" />
+          </svg> Smart Advisor
+        </a>
+        <a href="payments.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+            <line x1="1" y1="10" x2="23" y2="10" />
+          </svg> Payments
+        </a>
+      </nav>
+      <a href="../index.html" class="nav-item logout-btn" style="margin-top:auto;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg> Sign Out
+      </a>
+    </aside>
+
+    <!-- ████ MAIN ████ -->
+    <main class="dash-main">
+      <header class="dash-header">
+        <h1 class="header-title">Analysis</h1>
+        <div class="user-profile" style="display:flex;align-items:center;gap:24px;">
+          <div id="live-badge"
+            style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--BRIGHT);font-weight:800;letter-spacing:1px;text-transform:uppercase;">
+            <span id="live-badge-dot"
+              style="width:6px;height:6px;background:var(--BRIGHT);border-radius:50%;box-shadow:0 0 6px var(--BRIGHT);animation:pd 2s ease-in-out infinite;"></span>
+            <span id="live-badge-text">CONNECTING</span>
+          </div>
+          <div class="user-info">
+            <div class="user-name">Nishanth S</div>
+          </div>
+          <div class="avatar">NS</div>
+        </div>
+      </header>
+
+      <div class="dash-body">
+        <div class="an-body">
+
+          <!-- ── TOKEN INFO BAR ── -->
+          <div class="token-bar panel">
+            <div id="asset-icon" class="token-icon">₹</div>
+            <div style="min-width:0; flex-shrink:1;">
+              <div id="asset-name" class="token-name" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">NIFTY50 / INR</div>
+              <div id="asset-desc" class="token-addr">Portfolio — Growth ETF</div>
+            </div>
+
+            <select id="asset-selector" class="asset-select" style="flex-shrink:0;" aria-label="Select asset">
+              <option value="nifty">NIFTY50 (INR)</option>
+              <option value="btc">BTC (Crypto)</option>
+              <option value="eth">ETH (Crypto)</option>
+            </select>
+
+            <div class="chips" style="flex-shrink:0;" role="group" aria-label="Chart timeframe">
+              <button type="button" class="chip active" aria-pressed="true">1D</button>
+              <button type="button" class="chip" aria-pressed="false">7D</button>
+              <button type="button" class="chip" aria-pressed="false">1M</button>
+              <button type="button" class="chip" aria-pressed="false">1Y</button>
+            </div>
+            <div style="margin-left:auto; display:flex; align-items:center; gap:12px; flex-shrink:0;">
+              <div id="live-price" class="token-price"><span class="skeleton" style="min-width:90px;">&nbsp;</span></div>
+              <div class="token-change-up" id="live-chg"></div>
+            </div>
+          </div>
+
+          <!-- ── MAIN CHART ── -->
+          <div class="main-chart-panel panel">
+            <div class="chart-area">
+              <svg id="main-svg" viewBox="0 0 900 280" role="img" aria-label="Price candlestick chart">
+                <defs>
+                  <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="var(--BRIGHT)" stop-opacity="0.15" />
+                    <stop offset="100%" stop-color="var(--BRIGHT)" stop-opacity="0" />
+                  </linearGradient>
+                  <clipPath id="chartClip">
+                    <rect id="chart-clip-rect" x="0" y="0" width="900" height="260" />
+                  </clipPath>
+                </defs>
+
+                <!-- Y-axis price labels -->
+                <g id="y-grid"></g>
+                <!-- X-axis time labels -->
+                <g id="x-labels"></g>
+                <!-- Candlestick group (clipped) -->
+                <g id="candle-group" clip-path="url(#chartClip)"></g>
+
+                <!-- Hover crosshair -->
+                <line id="ch-v" x1="0" x2="0" y1="0" y2="260" stroke="rgba(255,255,255,.15)" stroke-width="1"
+                  stroke-dasharray="2 4" opacity="0" />
+                <line id="ch-h" x1="0" x2="900" y1="0" y2="0" stroke="rgba(255,255,255,.15)" stroke-width="1"
+                  stroke-dasharray="2 4" opacity="0" />
+
+                <g id="ch-tip-grp" opacity="0" style="pointer-events:none;">
+                  <rect id="ch-tip-bg" width="75" height="20" rx="4" fill="rgba(10,10,12,.92)"
+                    stroke="rgba(255,255,255,.08)" stroke-width="0.5" />
+                  <text id="ch-tip" x="37.5" y="14" text-anchor="middle" font-family="var(--F)"
+                    font-size="10" font-weight="600" fill="var(--T1)"></text>
+                </g>
+
+                <!-- Invisible hover target -->
+                <rect id="hover-area" x="0" y="0" width="900" height="260" fill="transparent"
+                  style="cursor:crosshair;" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- ── RIGHT COLUMN ── -->
+          <div class="right-col">
+
+            <!-- Portfolio Panel -->
+            <div class="panel" style="flex: 1; min-height: 0; display: flex; flex-direction: column;">
+              <div class="panel-hd">
+                <span class="panel-title">Portfolio</span>
+              </div>
+              <div class="portfolio-nums">
+                <div class="p-num">
+                  <div class="p-num-lbl">Today</div>
+                  <div class="p-num-val" id="pnl-today">₹—</div>
+                  <div class="p-num-chg" id="pnl-today-chg">—</div>
+                </div>
+                <div class="p-num">
+                  <div class="p-num-lbl">Month</div>
+                  <div class="p-num-val" id="pnl-month">₹—</div>
+                  <div class="p-num-chg" id="pnl-month-chg">—</div>
+                </div>
+                <div class="p-num">
+                  <div class="p-num-lbl">Year</div>
+                  <div class="p-num-val" id="pnl-year">₹—</div>
+                  <div class="p-num-chg" id="pnl-year-chg">—</div>
+                </div>
+              </div>
+
+              <!-- Transaction Trend Graph -->
+              <div class="tx-graph-wrap" style="flex: 1; min-height: 120px;">
+                <svg id="tx-svg" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="txGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="var(--BRIGHT)" stop-opacity=".28" />
+                      <stop offset="100%" stop-color="var(--BRIGHT)" stop-opacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path id="tx-area" fill="url(#txGrad)" d="" />
+                  <path id="tx-path" fill="none" stroke="var(--BRIGHT)" stroke-width="2"
+                    style="filter:drop-shadow(0 0 3px rgba(255,255,255,0.2))" />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Resource Allocation (Unified Spending Split) -->
+            <div class="panel" style="flex: 1; min-height: 0; display: flex; flex-direction: column;">
+              <div class="panel-hd">
+                <span class="panel-title">Spending Breakdown</span>
+                <span class="panel-meta">30D Split</span>
+              </div>
+              <div class="unlock-body" style="flex: 1; justify-content: center;">
+                <div class="unlock-donut-wrap">
+                  <svg id="unlock-svg" viewBox="0 0 80 80">
+                    <!-- Track -->
+                    <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="10" />
+                    <!-- Arc 1: Investments -->
+                    <circle id="u-arc1" cx="40" cy="40" r="32" fill="none" stroke="var(--BRIGHT)" stroke-width="10"
+                      stroke-linecap="butt" stroke-dasharray="0 201" stroke-dashoffset="0"
+                      transform="rotate(-90 40 40)"
+                      style="transition:stroke-dasharray 1.2s cubic-bezier(.16,1,.3,1),stroke-dashoffset 1.2s cubic-bezier(.16,1,.3,1)" />
+                    <!-- Arc 2: Essentials -->
+                    <circle id="u-arc2" cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="10"
+                      stroke-linecap="butt" stroke-dasharray="0 201" stroke-dashoffset="201"
+                      transform="rotate(-90 40 40)"
+                      style="transition:stroke-dasharray 1.2s .15s cubic-bezier(.16,1,.3,1),stroke-dashoffset 1.2s .15s cubic-bezier(.16,1,.3,1)" />
+                    <!-- Arc 3: Lifestyle -->
+                    <circle id="u-arc3" cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="10"
+                      stroke-linecap="butt" stroke-dasharray="0 201" stroke-dashoffset="201"
+                      transform="rotate(-90 40 40)"
+                      style="transition:stroke-dasharray 1.2s .3s cubic-bezier(.16,1,.3,1),stroke-dashoffset 1.2s .3s cubic-bezier(.16,1,.3,1)" />
+                    <!-- Arc 4: Other -->
+                    <circle id="u-arc4" cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="10"
+                      stroke-linecap="butt" stroke-dasharray="0 201" stroke-dashoffset="201"
+                      transform="rotate(-90 40 40)"
+                      style="transition:stroke-dasharray 1.2s .45s cubic-bezier(.16,1,.3,1),stroke-dashoffset 1.2s .45s cubic-bezier(.16,1,.3,1)" />
+                  </svg>
+                  <div class="unlock-center">
+                    <div class="unlock-pct">—</div>
+                    <div class="unlock-sub">Loading</div>
+                  </div>
+                </div>
+                <div class="unlock-legend">
+                  <div class="ul-row">
+                    <div class="ul-dot" style="background:var(--BRIGHT)"></div>Investments<span class="ul-pct" id="donut-pct-invest">—</span>
+                  </div>
+                  <div class="ul-row">
+                    <div class="ul-dot" style="background:rgba(255,255,255,.5)"></div>Essentials<span
+                      class="ul-pct" id="donut-pct-essentials">—</span>
+                  </div>
+                  <div class="ul-row">
+                    <div class="ul-dot" style="background:rgba(255,255,255,.2)"></div>Lifestyle<span
+                      class="ul-pct" id="donut-pct-lifestyle">—</span>
+                  </div>
+                  <div class="ul-row">
+                    <div class="ul-dot" style="background:rgba(255,255,255,.1)"></div>Other<span class="ul-pct" id="donut-pct-other">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+          </div><!-- /right-col -->
+
+          <!-- ── BOTTOM ROW ── -->
+          <div class="bottom-row" style="grid-template-columns: 1.6fr 1fr;">
+
+            <!-- Consolidated Cashflow Intelligence -->
+            <div class="panel" style="display:flex; flex-direction:column;">
+              <div class="panel-hd">
+                <span class="panel-title">Cashflow Intelligence</span>
+              </div>
+              <div style="display:flex; flex:1; min-height:0; padding:24px 28px; align-items:stretch; gap:32px;">
+                <!-- Summary Metrics Left -->
+                <div class="spending-summary-wrap"
+                  style="display:flex; flex-direction:column; justify-content:center; flex-shrink:0; min-width:160px;">
+                  <div class="summary-label"
+                    style="font-family:var(--M); color:var(--T3); font-size:11px; text-transform:uppercase; letter-spacing:2px; margin-bottom:12px;">
+                    Total Outflow (30D)</div>
+                  <div id="summary-total"
+                    style="font-family:var(--font-serif); font-size:40px; font-weight:700; color:var(--BRIGHT); margin-bottom:20px; line-height:1;">
+                    ₹0</div>
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <span
+                      style="font-family:var(--M); font-size:11px; color:var(--T3); text-transform:uppercase; letter-spacing:1px;">Trend</span>
+                    <span id="summary-trend"
+                      style="font-family:var(--M); font-weight:700; font-size:13px;">Calculating...</span>
+                  </div>
+                </div>
+                <!-- Heatmap Grid Right — 30 daily cells, 10 per row -->
+                <div class="heatmap-grid" id="heatmap"
+                  style="flex:1; align-self:center;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Kinetic Transaction Ticker -->
+            <div class="panel" style="display:flex; flex-direction:column; min-height:0;">
+              <div class="panel-hd">
+                <span class="panel-title">Live Ledger</span>
+                <span class="panel-meta" id="ticker-count">—</span>
+              </div>
+              <div class="vol-ticker-wrap" id="vol-ticker" style="flex:1; min-height:0;">
+                <!-- Populated by buildTickerFeed() -->
+              </div>
+            </div>
+
+          </div><!-- /bottom-row -->
+
+          <!-- ── LOWEST ROW ── -->
+          <div class="lowest-row">
+
+            <!-- NEURAL INTELLIGENCE PANEL -->
+            <div class="panel global-intel-panel" style="background:var(--BG); display:flex; flex-direction:column; min-height:0;">
+              <div class="panel-hd">
+                <span class="panel-title">⬡ Neural Intelligence</span>
+              </div>
+
+              <div class="intel-metrics-bar">
+                <div class="intel-metric">
+                  <div class="m-val" id="intel-conf-val">—</div>
+                  <div class="m-lbl">Avg Confidence</div>
+                </div>
+                <div class="intel-metric">
+                  <div class="m-val" id="intel-impact-sum" style="color:var(--BRIGHT);">—</div>
+                  <div class="m-lbl">Sentiment</div>
+                </div>
+                <div class="intel-metric">
+                  <div class="m-val" id="intel-bullish-count">—</div>
+                  <div class="m-lbl">Bullish Signals</div>
+                </div>
+                <div class="intel-metric">
+                  <div class="m-val" id="intel-updated-val" style="font-size:10px;">—</div>
+                  <div class="m-lbl">Last Updated</div>
+                </div>
+              </div>
+
+              <div class="intel-waterfall-container">
+                <div id="intel-stream" class="intel-stream">
+                  <!-- AI Intelligence streamed here -->
+                </div>
+              </div>
+
+              <!-- Consolidated Footer -->
+              <div class="intel-footer-bar">
+                <div id="intel-sync-status" class="status-active">
+                  <div class="pulse-dot" id="intel-sync-dot"></div>
+                  <span id="intel-sync-label">SYNC_STATUS: —</span>
+                </div>
+                <div id="intel-last-sync" style="color:var(--T3)">LAST_SYNC: —</div>
+              </div>
+            </div>
+            <!-- Asset Allocation Panel -->
+            <div class="panel" style="display:flex; flex-direction:column; min-height:0;">
+              <div class="panel-hd">
+                <span class="panel-title">Asset Allocation</span>
+                <span class="panel-meta" id="alloc-aum" title="Total invested capital at cost (qty × avg buy price)">Invested: —</span>
+              </div>
+              <div style="flex: 1; min-height: 0; padding: 24px; display:flex; flex-direction:column; gap:28px;">
+                <!-- Sophisticated Weighting Bar -->
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                  <div style="display:flex; justify-content:space-between; font-family:var(--M); font-size:10px; color:var(--T3); text-transform:uppercase; letter-spacing:1px;">
+                    <span>Diversification Index</span>
+                    <span id="divers-index" style="color:var(--BRIGHT)">—</span>
+                  </div>
+                  <div style="height:10px; display:flex; border-radius:3px; overflow:hidden; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:2px;">
+                    <!-- Widths start at 0 — only real /db/portfolio data fills them. -->
+                    <div id="alloc-bar-1" style="width:0%; background:var(--BRIGHT); border-radius:1.5px; box-shadow:0 0 10px rgba(255,255,255,0.1); transition:width .8s cubic-bezier(.16,1,.3,1);"></div>
+                    <div id="alloc-bar-2" style="width:0%; background:rgba(255,255,255,0.4); border-radius:1.5px; margin-left:2px; transition:width .8s cubic-bezier(.16,1,.3,1) .1s;"></div>
+                    <div id="alloc-bar-3" style="width:0%; background:rgba(255,255,255,0.15); border-radius:1.5px; margin-left:2px; transition:width .8s cubic-bezier(.16,1,.3,1) .2s;"></div>
+                  </div>
+                </div>
+
+                <!-- Asset Card Grid -->
+                <div class="asset-grid-scroll">
+
+                  <div class="asset-card">
+                    <div style="width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:14px;">₹</div>
+                    <div style="flex:1;">
+                      <div style="font-size:13px; font-weight:600; color:var(--T1); font-family:var(--font-serif);">NIFTY50</div>
+                      <div style="font-size:10px; color:var(--T3); text-transform:uppercase; letter-spacing:0.5px;">Equity ETF</div>
+                    </div>
+                    <div style="text-align:right;">
+                      <div id="alloc-pct-nifty" style="font-family:var(--M); font-size:13px; font-weight:700; color:var(--BRIGHT);">—</div>
+                      <div id="alloc-chg-nifty" style="font-size:10px; color:var(--T3);"><span style="opacity:0.4;margin-right:3px;">24h</span><span>…</span></div>
+                    </div>
+                  </div>
+
+                  <div class="asset-card">
+                    <div style="width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:14px;">₿</div>
+                    <div style="flex:1;">
+                      <div style="font-size:13px; font-weight:600; color:var(--T1); font-family:var(--font-serif);">Bitcoin</div>
+                      <div style="font-size:10px; color:var(--T3); text-transform:uppercase; letter-spacing:0.5px;">Crypto</div>
+                    </div>
+                    <div style="text-align:right;">
+                      <div id="alloc-pct-btc" style="font-family:var(--M); font-size:13px; font-weight:700; color:var(--T1);">—</div>
+                      <div id="alloc-chg-btc" style="font-size:10px; color:var(--T3);"><span style="opacity:0.4;margin-right:3px;">24h</span><span>…</span></div>
+                    </div>
+                  </div>
+
+                  <div class="asset-card">
+                    <div style="width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:14px;">Ξ</div>
+                    <div style="flex:1;">
+                      <div style="font-size:13px; font-weight:600; color:var(--T1); font-family:var(--font-serif);">Ethereum</div>
+                      <div style="font-size:10px; color:var(--T3); text-transform:uppercase; letter-spacing:0.5px;">Crypto</div>
+                    </div>
+                    <div style="text-align:right;">
+                      <div id="alloc-pct-eth" style="font-family:var(--M); font-size:13px; font-weight:700; color:var(--T1);">—</div>
+                      <div id="alloc-chg-eth" style="font-size:10px; color:var(--T3);"><span style="opacity:0.4;margin-right:3px;">24h</span><span>…</span></div>
+                    </div>
+                  </div>
+
+                  <!-- Untracked / placeholder asset -->
+                  <div class="asset-card" style="opacity:0.35; border-style:dashed; cursor:default;" title="Not yet tracked in portfolio">
+                    <div style="width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,0.02); display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--T3);">G</div>
+                    <div style="flex:1;">
+                      <div style="font-size:13px; font-weight:600; color:var(--T3); font-family:var(--font-serif);">Gold</div>
+                      <div style="font-size:10px; color:var(--T3); text-transform:uppercase; letter-spacing:0.5px;">Not tracked</div>
+                    </div>
+                    <div style="text-align:right;">
+                      <div style="font-family:var(--M); font-size:10px; font-weight:600; color:var(--T3); letter-spacing:0.5px;">+ Add</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /lowest-row -->
+
+          <!-- ══════════════════════════════
+               §9.4 BACKTESTING VIEW
+          ═══════════════════════════════ -->
+          <div class="backtest-row" style="grid-column:1/-1;">
+
+            <!-- Left: Controls -->
+            <div class="bt-panel">
+              <div class="bt-hd">
+                <span class="bt-title">⧖ Backtesting Engine</span>
+                <span class="bt-meta">SMA Crossover</span>
+              </div>
+              <div class="bt-form">
+                <div class="bt-field">
+                  <div class="bt-lbl">Asset Symbol</div>
+                  <select class="bt-select" id="bt-symbol">
+                    <optgroup label="Crypto">
+                      <option value="BTC-USD" selected>Bitcoin (BTC-USD)</option>
+                      <option value="ETH-USD">Ethereum (ETH-USD)</option>
+                    </optgroup>
+                    <optgroup label="Stocks">
+                      <option value="AAPL">Apple (AAPL)</option>
+                      <option value="MSFT">Microsoft (MSFT)</option>
+                      <option value="NVDA">NVIDIA (NVDA)</option>
+                      <option value="GOOGL">Alphabet (GOOGL)</option>
+                      <option value="AMZN">Amazon (AMZN)</option>
+                      <option value="TSLA">Tesla (TSLA)</option>
+                      <option value="META">Meta Platforms (META)</option>
+                      <option value="NFLX">Netflix (NFLX)</option>
+                      <option value="JPM">JPMorgan Chase (JPM)</option>
+                      <option value="AMD">Advanced Micro Devices (AMD)</option>
+                      <option value="TSM">Taiwan Semiconductor (TSM)</option>
+                      <option value="ORCL">Oracle (ORCL)</option>
+                      <option value="CRM">Salesforce (CRM)</option>
+                      <option value="INTC">Intel (INTC)</option>
+                      <option value="BABA">Alibaba Group (BABA)</option>
+                    </optgroup>
+                    <optgroup label="Indices">
+                      <option value="^NSEI">NIFTY50 (^NSEI)</option>
+                    </optgroup>
+                  </select>
+                </div>
+                <div class="bt-row2">
+                  <div class="bt-field">
+                    <div class="bt-lbl">Start Date</div>
+                    <input type="date" class="bt-input" id="bt-start" value="2023-01-01">
+                  </div>
+                  <div class="bt-field">
+                    <div class="bt-lbl">End Date</div>
+                    <input type="date" class="bt-input" id="bt-end">
+                  </div>
+                </div>
+                <div class="bt-row2">
+                  <div class="bt-field">
+                    <div class="bt-lbl">Short SMA</div>
+                    <input type="number" class="bt-input" id="bt-short" value="20" min="2" max="200">
+                  </div>
+                  <div class="bt-field">
+                    <div class="bt-lbl">Long SMA</div>
+                    <input type="number" class="bt-input" id="bt-long" value="50" min="5" max="500">
+                  </div>
+                </div>
+                <div class="bt-field">
+                  <div class="bt-lbl">Initial Capital (<span id="bt-currency-label">₹</span>)</div>
+                  <input type="number" class="bt-input" id="bt-capital" value="100000" step="10000">
+                </div>
+                <div id="bt-form-err" style="display:none;font-size:11px;color:var(--RED);font-family:var(--M);padding:6px 10px;background:rgba(255,77,77,.08);border:1px solid rgba(255,77,77,.2);border-radius:6px;letter-spacing:.3px;"></div>
+                <button class="bt-run" id="bt-run-btn">
+                  <div class="bt-run-inner">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Run Backtest
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Right: Results -->
+            <div class="bt-panel bt-results" id="bt-results-panel">
+              <div class="bt-hd">
+                <span class="bt-title" id="bt-results-title">Strategy Results</span>
+                <span class="bt-meta" id="bt-results-meta">—</span>
+              </div>
+
+              <!-- Empty state -->
+              <div class="bt-empty" id="bt-empty">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                Configure your parameters and run a backtest to see results
+              </div>
+
+              <!-- Populated on result -->
+              <div id="bt-populated" style="display:none; flex:1; flex-direction:column;">
+                <div class="bt-metrics" id="bt-metrics-row"></div>
+                <div class="bt-chart-area">
+                  <div class="bt-lbl" style="margin-bottom:10px;">Equity Curve</div>
+                  <div class="bt-chart-wrap" id="bt-chart-wrap">
+                    <svg id="bt-svg" preserveAspectRatio="none"></svg>
+                    <div class="bt-chart-tooltip" id="bt-chart-tooltip">
+                      <div class="bt-tt-date" id="bt-tt-date">—</div>
+                      <div class="bt-tt-val" id="bt-tt-val">—</div>
+                      <div class="bt-tt-chg" id="bt-tt-chg">—</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div><!-- /backtest-row -->
+
+        </div><!-- /an-body -->
+  </div>
+  </main>
+  </div>
+
+  <script src="../js/flux-data.js"></script>
+  <script src="../js/seed.js"></script>
+  <script src="../js/analysis.js"></script>
+</body>
+
+</html>

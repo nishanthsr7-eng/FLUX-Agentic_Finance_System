@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Advisor | FLUX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=JetBrains+Mono:wght@300;400;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/advisor.css">
+</head>
+
+<body>
+<div class="dash-layout">
+
+  <!-- ████ SIDEBAR ████ -->
+  <aside class="dash-sidebar">
+    <div class="sidebar-logo">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="2">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+      </svg>
+      FLUX
+    </div>
+    <nav class="nav-group">
+      <a href="dashboard.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg> Overview
+      </a>
+      <a href="analysis.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>
+        </svg> Analysis
+      </a>
+      <a href="marketplace.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg> Marketplace
+      </a>
+      <a href="advisor.html" class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+        </svg> Smart Advisor
+      </a>
+      <a href="payments.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+          <line x1="1" y1="10" x2="23" y2="10"/>
+        </svg> Payments
+      </a>
+      <a href="#" class="nav-item"
+        onclick="if(window.showToast) window.showToast('Settings', 'Settings module initialization in progress...')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg> Settings
+      </a>
+    </nav>
+    <a href="../index.html" class="nav-item logout-btn" style="margin-top:auto;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg> Sign Out
+    </a>
+  </aside>
+
+  <!-- ████ MAIN ████ -->
+  <main class="dash-main">
+    <header class="dash-header">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <h1 class="header-title">Smart Advisor</h1>
+        <span class="adv-tag">PREDICTION COCKPIT</span>
+      </div>
+      <div class="user-profile" style="display:flex;align-items:center;gap:24px;">
+        <div class="model-badge" id="model-badge" title="LLM verifier/chat agent (Ollama) status">
+          <div class="model-dot" id="model-dot"></div>
+          <span id="model-badge-text">AURA v4.2 · checking…</span>
+        </div>
+        <div class="user-info"><div class="user-name">Nishanth S</div></div>
+        <div class="avatar">NS</div>
+      </div>
+    </header>
+
+    <div class="dash-body">
+      <div class="adv-grid">
+
+        <!-- ══════════ LEFT: COCKPIT ══════════ -->
+        <div class="adv-main">
+
+          <!-- ── CONTAINER 1: LIVE FORECAST CHART ── -->
+          <section class="panel chart-panel">
+            <div class="chart-head">
+              <div class="asset-tabs" id="asset-tabs">
+                <button class="asset-tab active" data-asset="BTC">BTC</button>
+                <button class="asset-tab" data-asset="ETH">ETH</button>
+                <button class="asset-tab" data-asset="NIFTY">NIFTY</button>
+              </div>
+              <div class="chart-live">
+                <div class="cl-price" id="cl-price">—</div>
+                <div class="cl-meta">
+                  <span class="cl-chg neu" id="cl-chg">—</span>
+                  <span class="cl-dot" id="cl-dot" title="Live status"></span>
+                  <span class="cl-live-lbl" id="cl-live-lbl">LIVE</span>
+                </div>
+              </div>
+              <div class="tf-tabs" id="tf-tabs">
+                <button class="tf-tab" data-tf="1D">1D</button>
+                <button class="tf-tab active" data-tf="7D">7D</button>
+                <button class="tf-tab" data-tf="1M">1M</button>
+                <button class="tf-tab" data-tf="1Y">1Y</button>
+              </div>
+            </div>
+
+            <div class="chart-wrap" id="chart-wrap">
+              <svg class="chart-svg" id="chart-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+              <div class="chart-crosshair" id="chart-crosshair"></div>
+              <div class="chart-tooltip" id="chart-tooltip"></div>
+              <div class="chart-status" id="chart-status">Loading market data…</div>
+            </div>
+
+            <!-- ── CONTAINER 2: SIGNAL CONSOLE STRIP ── -->
+            <div class="signal-strip" id="signal-strip">
+              <div class="sig-tile">
+                <div class="sig-lbl">Agent call</div>
+                <div class="sig-val skel" id="sig-dir"></div>
+                <div class="sig-sub" id="sig-asof">—</div>
+              </div>
+              <div class="sig-tile">
+                <div class="sig-lbl">Confidence</div>
+                <div class="sig-val skel" id="sig-conf"></div>
+                <div class="sig-sub" id="sig-conf-sub">calibrated</div>
+              </div>
+              <div class="sig-tile">
+                <div class="sig-lbl">Target <span id="sig-h">5d</span></div>
+                <div class="sig-val skel" id="sig-target"></div>
+                <div class="sig-sub" id="sig-target-sub">—</div>
+              </div>
+              <div class="sig-tile">
+                <div class="sig-lbl"><span id="sig-band-pct">80</span>% band</div>
+                <div class="sig-val skel" id="sig-band"></div>
+              </div>
+              <div class="sig-tile">
+                <div class="sig-lbl">Position</div>
+                <div class="sig-val skel" id="sig-size"></div>
+                <div class="sig-sub" id="sig-size-sub">Kelly</div>
+              </div>
+              <div class="sig-tile">
+                <div class="sig-lbl">Regime · sentiment</div>
+                <div class="sig-val skel" id="sig-regime"></div>
+                <div class="sig-sub" id="sig-sent">—</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ── BOTTOM ROW: 3 ANALYTICS PANELS ── -->
+          <div class="bottom-row">
+
+            <!-- CONTAINER 3: CONVICTION LEADERBOARD -->
+            <section class="panel mini-panel">
+              <div class="mini-head">
+                <span class="mini-title">Conviction Board</span>
+                <span class="mini-meta" id="lb-meta">agent · all assets</span>
+              </div>
+              <div class="mini-body" id="lb-body">
+                <div class="skel-row"><span class="skel skel-rank"></span><span class="skel skel-sym"></span><span class="skel skel-dir"></span><span class="skel skel-bar"></span><span class="skel skel-conf"></span></div>
+                <div class="skel-row"><span class="skel skel-rank"></span><span class="skel skel-sym"></span><span class="skel skel-dir"></span><span class="skel skel-bar"></span><span class="skel skel-conf"></span></div>
+                <div class="skel-row"><span class="skel skel-rank"></span><span class="skel skel-sym"></span><span class="skel skel-dir"></span><span class="skel skel-bar"></span><span class="skel skel-conf"></span></div>
+                <div class="skel-row"><span class="skel skel-rank"></span><span class="skel skel-sym"></span><span class="skel skel-dir"></span><span class="skel skel-bar"></span><span class="skel skel-conf"></span></div>
+                <div class="skel-row"><span class="skel skel-rank"></span><span class="skel skel-sym"></span><span class="skel skel-dir"></span><span class="skel skel-bar"></span><span class="skel skel-conf"></span></div>
+              </div>
+            </section>
+
+            <!-- CONTAINER 4: VERIFIER -->
+            <section class="panel mini-panel">
+              <div class="mini-head">
+                <span class="mini-title">Verifier · 2nd opinion</span>
+                <button class="mini-btn" id="vf-btn">Run</button>
+              </div>
+              <div class="mini-body" id="vf-body">
+                <div class="mini-empty">The LLM risk-manager red-teams the model's call. Click <b>Run</b> for <span id="vf-sym">BTC</span>.</div>
+              </div>
+            </section>
+
+            <!-- CONTAINER 5: MODEL TRUST & TRACK RECORD -->
+            <section class="panel mini-panel">
+              <div class="mini-head">
+                <span class="mini-title">Model Trust</span>
+                <span class="mini-meta" id="trust-meta">calibration</span>
+              </div>
+              <div class="mini-body" id="trust-body">
+                <div class="skel-acc"><span class="skel skel-acc-val"></span><span class="skel skel-acc-lbl"></span></div>
+                <span class="skel skel-note"></span>
+                <span class="skel skel-note short"></span>
+                <span class="skel skel-chart"></span>
+              </div>
+            </section>
+
+          </div>
+        </div>
+
+        <!-- ══════════ RIGHT: AURA CHAT RAIL ══════════ -->
+        <aside class="panel chat-rail">
+          <div class="chat-head">
+            <div class="chat-id">
+              <div class="chat-avatar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--A)" stroke-width="2">
+                  <path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 8v4l3 3"/>
+                  <circle cx="18" cy="5" r="3" fill="var(--A)" stroke="none"/>
+                </svg>
+              </div>
+              <div>
+                <div class="chat-name">AURA Advisor</div>
+                <div class="chat-sub" id="chat-sub">Context-aware · ask about <span id="chat-ctx-sym">BTC</span></div>
+              </div>
+            </div>
+            <button class="clear-btn" id="clear-btn">Clear</button>
+          </div>
+
+          <div class="prompts-bar" id="prompts-bar">
+            <span class="prompt-chip" data-dyn="explain" role="button" tabindex="0">Explain this call</span>
+            <span class="prompt-chip" data-dyn="risk" role="button" tabindex="0">What's the risk?</span>
+            <span class="prompt-chip" data-prompt="Compare BTC and ETH right now — which has the stronger setup?" role="button" tabindex="0">Compare BTC vs ETH</span>
+            <span class="prompt-chip" data-prompt="Summarise my financial health in one paragraph." role="button" tabindex="0">My financial health</span>
+          </div>
+
+          <div class="msg-feed" id="msg-feed"></div>
+
+          <div class="input-row">
+            <textarea class="chat-input" id="chat-input"
+              placeholder="Ask AURA about this asset…" rows="1"></textarea>
+            <button class="send-btn" id="send-btn" title="Send">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../js/flux-data.js"></script>
+<script src="../js/seed.js"></script>
+<script src="../js/advisor.js"></script>
+</body>
+</html>

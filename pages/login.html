@@ -1,0 +1,289 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log In | FLUX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/nav.css">
+  <link rel="stylesheet" href="../css/hero.css">
+  <link rel="stylesheet" href="../css/layout-extensions.css">
+  <style>
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      position: relative;
+    }
+
+    .auth-card {
+      background: rgba(11, 11, 11, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 32px;
+      padding: 48px;
+      max-width: 480px;
+      width: 100%;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 1;
+      position: relative;
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .auth-header h1 {
+      font-family: var(--font-serif);
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .auth-header p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 16px;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      transition: all 0.3s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent-teal);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .auth-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #888 0%, #fff 100%);
+      color: #000;
+      border: none;
+      padding: 14px;
+      font-weight: 700;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      margin-top: 12px;
+    }
+
+    .auth-btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+      box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+    }
+
+    .auth-footer {
+      margin-top: 32px;
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .auth-footer a {
+      color: var(--text-primary);
+      font-weight: 600;
+      text-decoration: underline;
+    }
+
+    .back-home {
+      position: absolute;
+      top: 40px;
+      left: 40px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      z-index: 10;
+    }
+    
+    .forgot-pass {
+      display: block;
+      margin-top: 12px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-align: right;
+    }
+  </style>
+</head>
+
+<body class="auth-page">
+  <!-- Huge Background Text -->
+  <div class="bg-text-container">
+    <div class="bg-text visible">fl ux</div>
+  </div>
+
+  <a href="../index.html" class="back-home">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="19" y1="12" x2="5" y2="12"></line>
+      <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+    Back to Home
+  </a>
+
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>Welcome Back</h1>
+      <p>Log in to manage your digital assets.</p>
+    </div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="form-label" for="login-email">Email Address</label>
+        <input type="email" id="login-email" class="form-input" placeholder="name@example.com"
+          autocomplete="email" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="login-password">Password</label>
+        <input type="password" id="login-password" class="form-input" placeholder="••••••••••••"
+          autocomplete="current-password" required>
+        <a href="#" class="forgot-pass">Forgot Password?</a>
+      </div>
+      <div id="login-error"
+        style="display:none;font-size:13px;color:#ff4d4d;background:rgba(255,77,77,.08);border:1px solid rgba(255,77,77,.25);border-radius:10px;padding:10px 14px;margin-bottom:8px;">
+      </div>
+      <button type="submit" class="auth-btn" id="login-btn">Log In</button>
+    </form>
+
+    <div class="auth-footer">
+      Don't have an account? <a href="signin.html">Sign Up</a>
+    </div>
+  </div>
+
+  <style>
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 16px 24px;
+      border-radius: 16px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toast.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast-icon {
+      color: var(--accent-teal);
+    }
+  </style>
+
+  <div id="toast" class="toast">
+    <svg class="toast-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
+    <span>Reset link sent to your email.</span>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const forgotPass = document.querySelector('.forgot-pass');
+    const toast = document.getElementById('toast');
+
+    // Same API resolution as js/flux-data.js (this page doesn't load the
+    // hydration layer — there's no session yet to hydrate with).
+    const API = ((window.FLUX_CONFIG && window.FLUX_CONFIG.apiBase) ||
+      (['localhost', '127.0.0.1', ''].includes(location.hostname)
+        ? 'http://' + (location.hostname || 'localhost') + ':8000'
+        : location.origin)).replace(/\/$/, '');
+
+    if (loginForm) {
+      loginForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const btn   = document.getElementById('login-btn');
+        const errEl = document.getElementById('login-error');
+        const email    = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        errEl.style.display = 'none';
+        btn.disabled = true;
+        btn.textContent = 'Logging in…';
+        try {
+          const res = await fetch(API + '/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.detail || 'Login failed (' + res.status + ')');
+          // Fresh session: clear any previous user's hydrated data first.
+          ['flux_user', 'flux_transactions', 'flux_accounts', 'flux_portfolio', 'flux_recurring',
+           'flux_contacts', 'flux_protocols',
+           'flux_reward_states', 'flux_seeded'].forEach(k => localStorage.removeItem(k));
+          localStorage.setItem('flux_token', data.token);
+          if (data.user) localStorage.setItem('flux_user', JSON.stringify(data.user));
+          window.location.href = 'dashboard.html';
+        } catch (err) {
+          errEl.textContent = /failed to fetch/i.test(err.message)
+            ? 'Cannot reach the FLUX server — please try again shortly.'
+            : err.message;
+          errEl.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Log In';
+        }
+      });
+    }
+
+    if (forgotPass) {
+      forgotPass.addEventListener('click', function (e) {
+        e.preventDefault();
+        toast.classList.add('visible');
+        setTimeout(() => {
+          toast.classList.remove('visible');
+        }, 4000);
+      });
+    }
+  </script>
+</body>
+
+</html>
