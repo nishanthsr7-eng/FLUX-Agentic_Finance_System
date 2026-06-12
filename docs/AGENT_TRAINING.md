@@ -1,0 +1,273 @@
+# How the Prediction Agent Is Trained
+
+This document describes the design, algorithms, and end-to-end training pipeline
+of **FLUX-X**, the regime-conditional, asset-class-specialised prediction agent
+in `backend/prediction/`.
+
+> **Honesty contract.** Markets are near-efficient; no model reliably predicts
+> exact prices. The agent is engineered to be *measurably better out-of-sample*
+> than a typical tutorial pipeline — not by a bigger neural net, but by refusing
+> to leak the future, labelling tradeable moves, calibrating its confidence, and
+> backtesting net of costs. Realistic daily directional accuracy has a hard
+> ceiling (~0.55–0.58). The edge comes from **selectivity + orthogonal
+> information + cross-sectional construction**, and every component must beat its
+> baseline on purged, embargoed, out-of-fold (OOF) data or it stays gated OFF.
+
+---
+
+## 1. Architecture
+
+A three-layer hybrid:
+
+```
+LAYER 3 — LLM VERIFIER (Ollama `aura`)
+  Red-teams the top signals against fresh news/RAG. May VETO or DOWNGRADE
+  confidence; can NEVER raise it above the calibrated number.
+        ▲ auditable rationale
+LAYER 2 — SIGNAL ENGINE (per asset class)
+  Crypto expert + Equity expert, each: base learners (GBDT + ElasticNet)
+  → meta-label (P the call is correct) → regime-conditional stack (self-gated)
+  → isotonic calibration + conformal bands → calibrated edge.
+  Regime (HMM) acts as feature, expert-weight selector, and size gate.
+        ▲
+LAYER 1 — LEAK-SAFE FEATURE STORE
+  Common: frac-diff price, momentum, volatility, relative strength.
+  Crypto: funding, open interest, DVOL, on-chain, Fear & Greed, BTC lead-lag.
+  Equity: macro term/credit spreads, options IV/skew, fundamentals, sector RS.
+  Sentiment: FinBERT (equity) + CryptoBERT (crypto) + GDELT tone, all ≤ t.
+        ▼
+PORTFOLIO CONSTRUCTION (the Sharpe driver)
+  Cross-sectional rank by (calibrated edge × meta-prob) → market/sector-
+  neutralise → top/bottom decile → vol-target → cost-aware Kelly → paper orders.
+
+FLYWHEEL: log → resolve → live calibration → drift-triggered retrain.
+```
+
+---
+
+## 2. Algorithms and Techniques
+
+| Technique | Purpose | Implementation |
+|---|---|---|
+| **Triple-barrier labeling** | Label *tradeable* moves (profit-take / stop / time-out) scaled by volatility, not arbitrary fixed-% bins | `labeling.py` |
+| **Meta-labeling** | A second model predicts whether to *act* on the primary direction call; decouples side from precision/size | `labeling.py`, `train.py` |
+| **Fractional differentiation** | Stationary features that *retain memory*; the minimum order `d` that passes an ADF test | `features.py` |
+| **Purged + embargoed walk-forward CV** | Removes overlapping-label leakage — the #1 cause of fake accuracy | `cv.py` (`PurgedWalkForwardSplit`) |
+| **Sample-uniqueness weighting** | Down-weights overlapping/crowded periods so the model does not over-count them | `labeling.py`, `train.py` |
+| **Gradient-boosted trees (XGBoost)** | Direction classifier; tabular GBMs beat deep nets on noisy daily data | `train.py` |
+| **ElasticNet base learner** | A decorrelated linear learner that diversifies the ensemble | `ensemble.py` |
+| **Isotonic probability calibration** | Makes "62%" mean ~62% historically (ECE-checked) | `train.py` |
+| **Conformal prediction bands** | Distribution-free, guaranteed-coverage intervals on a *purged* splitter | `conformal.py` |
+| **GARCH(1,1) volatility** | Shapes the conformal band (widens in high-vol clusters) | `garch.py` |
+| **Gaussian HMM regime detection** | Trend / chop / risk-off as a feature, expert selector, and size gate | `regime.py` |
+| **Regime-conditional stacking** | A mixture-of-experts blend whose weights differ per regime; self-gated | `ensemble.py` |
+| **Cross-sectional construction** | Rank, market/sector-neutralise, vol-target → turns a thin hit-rate into Sharpe | `portfolio.py` |
+| **Fractional-Kelly sizing** | Cost-aware position sizing from the *calibrated* win-probability (¼-Kelly) | `sizing.py` |
+| **LLM verifier** | One-way veto/downgrade against fresh narrative | `agent.py` |
+| **Honesty baselines** | Persistence, ARIMA, and Chronos zero-shot the model must beat | `baselines.py` |
+
+---
+
+## 3. Feature Engineering (Layer 1)
+
+All features are **causal** — row `t` uses only data ≤ `t`. Built per symbol and
+pooled cross-sectionally.
+
+- **Common block** (`features.py`): fractional-differentiated log price,
+  multi-horizon momentum and log returns, realised volatility, ATR/price,
+  price-vs-SMA ratios, relative strength vs market/sector.
+- **Crypto block** (`crypto_features.py`): funding level / z-score / sign-flips,
+  open-interest change and OI/volume, DVOL level and term, on-chain NVT and
+  address growth, Fear & Greed, BTC lead-lag.
+- **Equity block** (`equity_features.py`, `fred.py`, `options.py`): FRED
+  term/credit spreads and rates, options IV/skew, fundamentals (earnings
+  surprise, revision, valuation z-score) aligned to **filing date** (not period
+  date) to avoid leakage, sector relative strength.
+- **Sentiment block** (`sentiment.py`, `sentiment_features.py`): FinBERT for
+  equity news, CryptoBERT for crypto, GDELT tone — all time-aligned ≤ `t`.
+
+Data-source loaders in `backend/prediction/datasources/` convert each staged
+dataset (see [docs/DATASETS.md](DATASETS.md)) into tidy daily frames keyed by
+`(symbol, date)`.
+
+---
+
+## 4. Labeling and Cross-Validation
+
+### Triple-barrier labels (`labeling.py`)
+
+From each event `t`, set a profit-take and stop-loss barrier scaled by recent
+(EWMA) volatility, plus a vertical time-out barrier at horizon `h`. The label is
+*which barrier is hit first*. Default configuration in `train.py`:
+
+```
+HORIZON = 5 days,  PT = 2.0·vol,  SL = 2.0·vol
+```
+
+### Meta-labels
+
+The primary model predicts side (±1). A binary `act` target —
+`1 if the primary side matched the realised triple-barrier outcome else 0` —
+trains the meta-model. At inference: `side = primary`, `size ∝ meta_prob`, and a
+trade is taken only when `meta_prob` clears the act-gate (e.g. ≥ 0.60).
+
+### Purged walk-forward CV (`cv.py`)
+
+Triple-barrier labels overlap in time, so standard CV leaks. `PurgedWalkForwardSplit`:
+
+- Orders folds in time (walk-forward; never random K-fold).
+- **Purges** training samples whose label window overlaps the test window.
+- **Embargoes** a tail buffer after each test fold (`EMBARGO = HORIZON + 2`, so
+  no label leaks across the seam).
+
+All reported metrics come **only** from these out-of-sample folds.
+
+---
+
+## 5. The Training Run (`backend/prediction/train.py`)
+
+The default pooled trainer trains ONE cross-sectional XGBoost model over all
+liquid symbols. Because every feature is stationary / ratio-based, pooling is
+valid and gives far more data than per-symbol models.
+
+What it does, in order:
+
+1. **Assemble the dataset** — for each symbol with ≥ `MIN_EVENTS` (800) rows,
+   build features (with the frac-diff order calibrated on **early history only**
+   → causal) and triple-barrier labels, pool them, and sort by date. Stablecoins
+   (USDT) and macro series (SPX, VIX, TNX) are excluded from the trainable set.
+2. **Evaluate out-of-fold** with `PurgedWalkForwardSplit` (6 splits) → directional
+   accuracy and AUC, leak-free.
+3. **Compare against baselines** — persistence, always-up, and majority. The
+   model must beat them out-of-sample or the features need work.
+4. **Calibrate** probabilities (isotonic) and report **Expected Calibration
+   Error (ECE)**.
+5. **Fit conformal bands** on the purged splitter, shaped by GARCH conditional
+   volatility, and report empirical coverage.
+6. **Refit** on all data and **persist** the model, calibrator, conformal
+   artifacts, and metadata to `backend/prediction/models/`.
+
+Run it:
+
+```bash
+python backend/prediction/train.py
+```
+
+Persisted artifacts (`models/`, git-ignored) include the XGBoost primary and
+meta models, scaler, frac-diff parameters, isotonic calibrator, conformal
+object, HMM, and `model_meta.json` (the recorded baseline metrics).
+
+---
+
+## 6. Phased Build and Gates (FLUX-X)
+
+The agent is built incrementally; each phase ends with a **GATE** — a measurable
+check on purged OOF. If a component fails its gate it stays self-gated OFF. The
+gate scripts live in `scripts/` (`gate0_*` … `gate9_*`).
+
+| Phase | Goal | Gate |
+|---|---|---|
+| 0 | Baseline lock + data backfill | Baseline metrics reproduced and logged |
+| 1 | Activate FRED macro features | OOF AUC ≥ baseline; ECE not worse |
+| 2 | Crypto-native features (funding/OI/DVOL/on-chain) | Crypto-subset AUC ≥ baseline + 0.01 |
+| 3 | Asset-class specialisation (crypto vs equity experts) | Specialised ≥ pooled per class |
+| 4 | Equity fundamentals + events | Equity-subset AUC ≥ Phase 3 |
+| 5 | Multi-source sentiment (CryptoBERT, GDELT) | Sentiment-augmented AUC ≥ prior |
+| 6 | Regime-conditional stacking ensemble | Stack AUC > best single base learner |
+| 7 | Cross-sectional neutralised portfolio | Net-of-cost Sharpe > baseline; drawdown ≤ current |
+| 8 | LLM verifier + flywheel hardening | Verifier never raises confidence; drift-retrain fires |
+| 9 | Honesty baselines (continuous) | FLUX-X beats naive + foundation baselines on OOF |
+
+---
+
+## 7. Inference Algorithm (per symbol, per day, using only data ≤ t)
+
+```
+1. FEATURES   x = [ common ⊕ (crypto|equity block) ⊕ sentiment ]   (all causal)
+2. REGIME     r = HMM.filter(market_obs ≤ t)        → {trend, chop, risk_off}
+3. BASE       p1 = GBDT_expert.predict_proba(x)
+              p2 = ElasticNet_expert.predict_proba(x)
+4. META       m  = MetaGBDT.predict_proba([x, p1, p2])   # P(call is correct)
+5. STACK      p* = σ(W[r] · [logit p1, logit p2, m, sentiment, regime])  (self-gated)
+6. CALIBRATE  p_cal = Isotonic(p*) ;  band = conformal(center, GARCH σ_h)
+7. EDGE/GATE  edge = p_cal − 0.5 ;  act = (m ≥ 0.60)
+              size = Kelly(p_cal) · regime_scale[r] · earnings_gate
+8. CROSS-SECTION  rank by edge·m → market/sector-neutralise → top/bottom decile
+              → vol-target → apply costs
+9. VERIFY     LLM red-teams top-k vs fresh news/RAG → may veto/downgrade only
+10. EXECUTE   paper orders (Alpaca dry-run) ; LOG → resolve@t+h → calibrate → retrain
+```
+
+Serving is handled by `predict.py` / `serve.py`; the verifier by `agent.py`; the
+flywheel (logging, resolution, drift-triggered retraining, paper forward-test) by
+`backtest.py`, `drift.py`, and `paper.py`.
+
+---
+
+## 8. Evaluation Metrics
+
+| Layer | Metric | Target |
+|---|---|---|
+| Direction (meta-labeled) | Accuracy / Precision@threshold / F1 | DA 56–63%; precision on taken trades > baseline |
+| Magnitude regression | MAE / RMSE on % return, directional accuracy | DA > 55%; RMSE < persistence and < Chronos |
+| Confidence calibration | ECE / Brier / reliability curve | ECE < 5%; predicted ≈ realised hit-rate |
+| Conformal bands | Empirical coverage vs stated | 80% band covers 80% ± 3% out-of-sample |
+| Strategy backtest | Sharpe/Sortino net of 5 bps, max DD, profit factor, per regime | Sharpe > baseline after costs |
+
+Every model is compared against four baselines — persistence, ARIMA,
+"always up," and **Chronos zero-shot**. If it cannot beat all four out-of-sample
+after costs, the features are fixed rather than the net being tuned.
+
+---
+
+## 9. The Self-Correcting Flywheel
+
+1. Every prediction is logged to SQLite with its calibrated confidence, regime,
+   conformal band, and feature snapshot.
+2. After the horizon elapses, outcomes are **resolved** (which barrier was hit,
+   direction correct, P&L net of costs) into `prediction_outcomes`.
+3. `calibration_buckets` is refreshed from realised per-decile hit-rates, so the
+   displayed confidence stays honest over time.
+4. **Drift-triggered retraining** (`drift.py`) re-runs training when recent
+   accuracy or ECE drifts past a threshold.
+5. Live signals are forward-tested on the **Alpaca paper account** before any
+   notion of real capital — and the system never trades live.
+
+---
+
+## 10. Pitfalls the Pipeline Explicitly Avoids
+
+1. Look-ahead leakage — every feature's time alignment is audited; a
+   shift-forward test must *drop* accuracy.
+2. Overlapping-label leakage — purged + embargoed CV, never plain
+   `TimeSeriesSplit`.
+3. Random K-fold on time series — never; walk-forward only.
+4. Predicting raw price — predict returns; frac-diff the inputs.
+5. Uncalibrated confidence — isotonic calibration with ECE checks.
+6. Adjustment/survivorship bias — adjusted close, cross-checked against Stooq.
+7. Overfitting one regime — tested across drawdown periods; regime gate applied.
+8. Ignoring costs — 5 bps round-trip baked into every backtest.
+9. Full Kelly — ¼-Kelly off calibrated probabilities only.
+10. Auto-trading too early — paper forward-test only; no live execution.
+
+---
+
+## 11. LLM Layer Boundary
+
+The LLM does **not** predict price — the machine-learning models do. It explains
+the numbers, cross-checks them against news and RAG context, and may lower
+confidence or veto a trade when the narrative contradicts the model. It can never
+raise confidence above the calibrated value. This separation keeps the system
+both accurate and auditable.
+
+---
+
+## Appendix — Reference Reading
+
+- López de Prado, *Advances in Financial Machine Learning* — triple-barrier,
+  meta-labeling, purged CV, sample uniqueness.
+- Angelopoulos & Bates, *A Gentle Introduction to Conformal Prediction* —
+  guaranteed-coverage intervals.
+- Oreshkin et al., *N-BEATS* — interpretable deep forecasting (magnitude head).
+- Documentation for `xgboost`, `scikit-learn`, `hmmlearn`, `arch`, and
+  `chronos-forecasting`.
