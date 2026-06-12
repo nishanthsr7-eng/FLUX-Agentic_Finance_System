@@ -1,0 +1,64 @@
+# Environment variables — never commit secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+backend/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# AI / agent tooling — local dev scaffolding, not part of the product
+.agent/
+.cursor/
+GEMINI.md
+
+# Logs
+*.log
+
+# Databases & vector store
+*.db
+*.db-wal
+*.db-shm
+flux_chroma/
+flux_market.db*
+
+# Local model artifacts (large / re-trainable — see docs/)
+*.gguf
+*.pkl
+*.pt
+backend/prediction/models/
+
+# Training datasets (multi-GB, re-downloadable — see docs/DATASETS.md)
+Dataset/
+
+# Test / tooling caches
+.pytest_cache/
+
+# Stray pip-redirect files
+=*.*
