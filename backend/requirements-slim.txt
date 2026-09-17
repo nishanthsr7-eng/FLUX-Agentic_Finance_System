@@ -1,0 +1,61 @@
+# FLUX Backend — slim dependency set for 512 MB hosts (Render free tier).
+#
+# Identical to requirements.txt minus torch, transformers and chronos-forecasting.
+# Measured resident memory after importing everything here: ~248 MB, against
+# ~748 MB for the full set. torch alone accounts for 445 MB of that gap, which
+# is why it goes and everything else stays.
+#
+# What this costs, and nothing else:
+#   • FinBERT/CryptoBERT news sentiment  → replaced by SENTIMENT_BACKEND=llm,
+#     which scores the same headlines with the configured chat model.
+#   • The LSTM magnitude head (magnitude.py) → the XGBoost direction
+#     classifier and the conformal bands are unaffected.
+#   • The Chronos zero-shot baseline (baselines.py) → a benchmark to beat,
+#     not a serving path; the ARIMA baseline still runs.
+#
+# Every one of those imports torch lazily inside a function and is already
+# wrapped in try/except, so their absence degrades the feature rather than
+# breaking the app. Chroma/RAG is NOT dropped — it costs 16 MB.
+#
+# Install:  pip install -r backend/requirements-slim.txt
+
+# ── Web framework ─────────────────────────────────────────────────────────────
+fastapi>=0.115.0
+uvicorn>=0.30.0
+httpx>=0.27.0
+python-dotenv>=1.0.0
+pydantic-settings>=2.0.0
+
+# ── Market data ───────────────────────────────────────────────────────────────
+yfinance>=0.2.40
+
+# ── Persistence ───────────────────────────────────────────────────────────────
+aiosqlite>=0.20.0           # async SQLite driver
+pymysql>=1.1.0              # MySQL driver for the seeded /db/* dataset
+certifi>=2024.2.2           # CA bundle for MySQL TLS (managed tiers refuse plaintext)
+
+# ── Scheduling ────────────────────────────────────────────────────────────────
+apscheduler>=3.10.4         # AsyncIOScheduler
+
+# ── RAG / Vector DB ───────────────────────────────────────────────────────────
+# Kept: importing chromadb costs ~16 MB. Its ONNX all-MiniLM-L6-v2 embedder is
+# pulled on first use (~80 MB) and is the one runtime cost worth watching on a
+# 512 MB box — drop this line first if the host starts OOMing.
+chromadb>=0.5.23
+
+# ── Prediction agent ──────────────────────────────────────────────────────────
+pandas>=2.2
+numpy>=1.26
+scikit-learn>=1.4          # models, calibration, metrics
+statsmodels>=0.14          # ADF stationarity test (frac-diff order) + ARIMA baseline
+xgboost>=2.0               # direction classifier (Layer 2a)
+hmmlearn>=0.3              # market regime detection (Part 4)
+scipy>=1.11                # forward-filter logsumexp
+arch>=6.3                  # GARCH(1,1) volatility → shapes the conformal band (Phase 4)
+praw>=7.7                  # Reddit retail-flow sentiment (needs REDDIT_* keys)
+pytest>=8.0                # test suite
+
+# Deliberately absent — see the header:
+#   torch
+#   transformers
+#   chronos-forecasting

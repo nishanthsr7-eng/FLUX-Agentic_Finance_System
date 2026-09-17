@@ -1,35 +1,65 @@
 # Deployment — free tier, end to end
 
-FLUX deploys as three free pieces:
+FLUX deploys as four free pieces:
 
 | Piece | Host | Free tier |
 |---|---|---|
 | Static frontend | Cloudflare Pages | Unlimited sites, no sleep |
-| FastAPI backend | Google Cloud Run | 2M requests/mo, scales to zero |
+| FastAPI backend | Render | 512 MB, 750 instance-hours/month |
 | MySQL dataset | TiDB Serverless | 5 GB, no forced sleep |
-| LLM (chat, insights) | Groq | Free API tier |
+| LLM (chat, insights, sentiment) | Groq | Free API tier |
 
-There is no paid step anywhere in this guide.
+There is no paid step anywhere in this guide, and **no credit card is required
+at any point**. That constraint is what picked these four.
 
 ## Why this split
 
-The backend installs torch, transformers (FinBERT), chromadb and xgboost —
-roughly 2 GB, needing 1–2 GB RAM at idle. That does not fit the 512 MB free
-tiers on Render, Fly or Railway. Cloud Run lets a service ask for 2–4 GiB and
-bills per request-second, so a demo that is idle most of the day stays inside
-the always-free allowance.
+The full backend installs torch, transformers (FinBERT), chromadb and xgboost.
+Measured resident memory after importing all of it is ~748 MB, of which torch
+alone is 445 MB. Nothing free and card-free holds that.
 
-Hugging Face Spaces was the original choice here and the guide said so until
-July 2026, when Docker Spaces moved behind PRO ($9/month). Spaces is still the
-least-effort option if you happen to have PRO — the Dockerfile runs there
-unchanged apart from the port.
+Dropping torch brings the import cost to ~248 MB, and the app itself boots at
+~120 MB because the prediction stack loads lazily. That fits Render's 512 MB
+with room to serve. So the deployed image is the slim build — see
+[backend/requirements-slim.txt](../backend/requirements-slim.txt) for the exact
+set and what it trades away.
+
+Two earlier choices are recorded here because they look obvious and are not:
+
+* **Hugging Face Spaces** gave 16 GB free and was the original target. Docker
+  and Gradio Spaces moved behind PRO ($9/month) in July 2026 with no
+  announcement; only Static Spaces remain free, which cannot serve FastAPI.
+* **Google Cloud Run** fits the full image comfortably at 2 GiB and stays
+  inside its always-free allowance for a demo — but enabling billing requires
+  a card even when the bill is zero. It is the right answer if you have one.
 
 The frontend is static, so it does not belong on the same host: Pages serves it
-from the edge with no cold start, and the API can scale to zero without the
-site going down with it.
+from the edge with no cold start, and the API can sleep without the site going
+down with it.
 
 Ollama is local-only. Nothing free will host a local LLM, so the deployed build
 talks to an OpenAI-compatible endpoint instead — see [backend/llm.py](../backend/llm.py).
+
+## What the slim build gives up
+
+Three torch-dependent features, and nothing else:
+
+| Feature | Status on Render |
+|---|---|
+| FinBERT / CryptoBERT news sentiment | **replaced** — `SENTIMENT_BACKEND=llm` scores the same headlines with the chat model |
+| LSTM magnitude head (`magnitude.py`) | unavailable |
+| Chronos zero-shot baseline (`baselines.py`) | unavailable — the ARIMA baseline still runs |
+
+Everything else is intact: the XGBoost direction classifier and meta-model,
+conformal prediction bands, GARCH volatility, HMM regime detection, RAG and
+semantic search, all market-data ingestion, every MySQL-backed dashboard, and
+Groq-powered chat, insights and the verifier layer.
+
+The sentiment swap is a real substitution, not a stub, and the two backends do
+differ: FinBERT returns calibrated class probabilities, whereas the LLM returns
+a judgement that clusters on round numbers. Downstream this only feeds an
+aggregate mean, which is robust to that. See
+[sentiment_llm.py](../backend/prediction/sentiment_llm.py).
 
 ---
 
@@ -67,73 +97,72 @@ Any OpenAI-compatible endpoint works — OpenRouter's `:free` models and
 Gemini's compatibility shim are both drop-in. Change `LLM_BASE_URL` and
 `LLM_MODEL` to switch.
 
-## 3. Backend — Google Cloud Run
+## 3. Backend — Render
 
-### One-time account setup
+No CLI and no card. Render builds the Dockerfile straight from GitHub.
 
-1. Create a project at <https://console.cloud.google.com/projectcreate>, e.g.
-   `flux-api`. Note the **project ID** — it is not always what you typed.
-2. Enable billing on it. A card is required even for free-tier use; nothing is
-   charged while you stay inside the allowance below.
-3. Install the CLI: <https://cloud.google.com/sdk/docs/install>, then
+1. Sign up at <https://render.com> with your GitHub account.
+2. **New → Blueprint**, pick this repo. Render reads
+   [render.yaml](../render.yaml) and proposes a `flux-api` web service on the
+   free plan.
+3. It prompts for every value marked `sync: false`. Fill in:
 
-   ```bash
-   gcloud auth login
-   gcloud config set project <your-project-id>
-   gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com
-   ```
+   | Key | Value |
+   |---|---|
+   | `LLM_API_KEY` | your Groq key |
+   | `MYSQL_HOST` | `gateway01.<region>.prod.aws.tidbcloud.com` |
+   | `MYSQL_USER` | the long prefixed TiDB username |
+   | `MYSQL_PASSWORD` | the TiDB password |
+   | `CORS_ORIGINS` | leave blank for now — step 4 fills it |
+   | `FINNHUB_API_KEY`, `COINGECKO_API_KEY`, `ALPHA_VANTAGE_API_KEY`, `NEWSAPI_KEY`, `FRED_API_KEY` | from your `.env` |
 
-### Deploy
+   `AUTH_SECRET` is generated by Render; everything else is already in the
+   blueprint.
 
-From the repo root:
+4. **Apply.** The first build takes ~5 minutes — much faster than the full
+   image, because torch is not in it.
 
-```bash
-gcloud run deploy flux-api   --source .   --region asia-south1   --allow-unauthenticated   --memory 2Gi   --cpu 2   --timeout 300   --max-instances 3   --min-instances 0
-```
+5. Check `https://<service>.onrender.com/health`. It should report
+   `"provider": "openai"`, your model, and `"scheduler": {"running": true}`.
 
-Cloud Build builds the Dockerfile and Cloud Run serves it. The first build takes
-~10 minutes; torch and the FinBERT weights dominate. The command prints the
-service URL, `https://flux-api-<hash>-<region>.a.run.app` — that is what the
-frontend needs in step 4.
+### Keeping it warm
 
-`--memory 2Gi` is not optional. The default 512 MiB cannot import torch, and the
-failure mode is an opaque "container failed to start" rather than an OOM message.
+The free plan spins a service down after 15 minutes idle, and the next visitor
+then waits 30–60 s. The plan also allows 750 instance-hours per month and a
+month is 730 hours, so one service can stay up continuously and still fit.
 
-### Runtime configuration
+[.github/workflows/keep-warm.yml](../.github/workflows/keep-warm.yml) pings
+`/health` every 10 minutes to hold it open. To enable it, add a repository
+**variable** (not a secret — it is a public URL) named `FLUX_API_URL` set to
+your service URL, under *Settings → Secrets and variables → Actions →
+Variables*.
 
-Set the secrets and variables on the service. Values come from steps 1 and 2:
+This only fits if `flux-api` is the **only** service in the Render workspace.
+A second free service pushes the pair past 750 hours and both get suspended for
+the rest of the month.
 
-```bash
-gcloud run services update flux-api --region asia-south1   --set-env-vars "LLM_BASE_URL=https://api.groq.com/openai/v1"   --set-env-vars "LLM_MODEL=llama-3.3-70b-versatile"   --set-env-vars "LLM_API_KEY=gsk_..."   --set-env-vars "MYSQL_HOST=gateway01.<region>.prod.aws.tidbcloud.com"   --set-env-vars "MYSQL_PORT=4000"   --set-env-vars "MYSQL_USER=<user>"   --set-env-vars "MYSQL_PASSWORD=<password>"   --set-env-vars "MYSQL_DB=flux"   --set-env-vars "MYSQL_SSL=true"   --set-env-vars "AUTH_REQUIRED=true"   --set-env-vars "AUTH_SECRET=<a long random string>"   --set-env-vars "INGESTION_ENABLED=true"   --set-env-vars "INGESTION_INTERVAL_MIN=30"
-```
+### Raise the ingestion interval
 
-Plus whichever market-data keys you use (`FINNHUB_API_KEY`, `COINGECKO_API_KEY`,
-`NEWSAPI_KEY`, …) — see [API_KEYS.md](API_KEYS.md). For anything sensitive,
-Secret Manager (`--set-secrets`) is better than `--set-env-vars`; env vars are
-visible to anyone with console read access on the project.
+The blueprint already sets `INGESTION_INTERVAL_MIN=30`. Do not lower it. The
+scheduler runs nine jobs; at the 5-minute default a public deployment exhausts
+the free market-data quotas (Finnhub 60 requests/minute, NewsAPI 100 per day)
+within hours. Market-data quota is the binding constraint here, not compute.
 
-Then check `https://<service-url>/health`. It should report `"provider":
-"openai"` and your model.
+### If you have more RAM available
 
-**Raise `INGESTION_INTERVAL_MIN`.** The scheduler runs nine jobs; at the default
-5 minutes a public deployment will exhaust the free market-data quotas
-(Finnhub allows 60 requests/minute, NewsAPI 100 requests/day) within hours.
-
-### Redeploying
-
-Re-run the same `gcloud run deploy` command. There is no push-to-deploy wiring;
-adding it needs a service account and Workload Identity Federation, which is
-more setup than a one-command redeploy is worth for this project.
+The same Dockerfile builds the full image with `--build-arg FULL=1`, which
+restores FinBERT, the LSTM magnitude head and the Chronos baseline. Set
+`SENTIMENT_BACKEND=auto` alongside it. It needs ~1 GB.
 
 ## 4. Frontend — Cloudflare Pages
 
-1. Edit **`js/flux-config.js`** and set `PRODUCTION_API` to your Cloud Run URL:
+1. Edit **`js/flux-config.js`** and set `PRODUCTION_API` to your Render URL:
 
    ```js
-   var PRODUCTION_API = 'https://flux-api-<hash>-<region>.a.run.app';
+   var PRODUCTION_API = 'https://flux-api.onrender.com';
    ```
 
-2. Edit **`pages/analysis.html`** and replace `https://CHANGE-ME.run.app` in
+2. Edit **`pages/analysis.html`** and replace `https://CHANGE-ME.onrender.com` in
    the `connect-src` of its CSP with the same URL. That page has a
    Content-Security-Policy, so the browser blocks the API regardless of what
    the config resolves to unless the origin is named there.
@@ -149,10 +178,13 @@ more setup than a one-command redeploy is worth for this project.
    | Build output directory | `dist` |
 
 5. Deploy, then point the API at the `*.pages.dev` domain Cloudflare gives you:
+   in the Render dashboard, *Environment* → set
 
-   ```bash
-   gcloud run services update flux-api --region asia-south1      --set-env-vars 'CORS_ORIGINS=["https://<your-site>.pages.dev"]'
    ```
+   CORS_ORIGINS = ["https://<your-site>.pages.dev"]
+   ```
+
+   Render redeploys automatically when an env var changes.
 
 The build copies an allowlist into `dist/` — see
 [scripts/build-static.mjs](../scripts/build-static.mjs). Pages serves its
@@ -163,34 +195,42 @@ output directory verbatim, so pointing it at the repo root would publish
 
 ## Known limits of the free tier
 
-- **Cloud Run scales to zero.** The first request after an idle period pays a
-  cold start, and this image is slow to start because importing torch is slow —
-  budget 30–60 s. `--min-instances 1` removes it but leaves an instance billing
-  around the clock, which does not stay inside the free allowance.
-- **The container filesystem is in-memory.** SQLite ingestion history and the
-  Chroma vector store reset on every new revision *and* count against the 2 GiB
-  RAM while they live. Anything that must survive belongs in MySQL.
-- **`--allow-unauthenticated` makes the API world-reachable.** That is what the
-  static frontend needs, so keep `AUTH_REQUIRED=true` and treat every route as
-  publicly callable.
-- **Watch the billing page for the first week.** The free allowance is per-month
-  and generous for a demo, but a scheduler misconfiguration that keeps an
-  instance warm will quietly eat it. Set a budget alert at $1.
+- **512 MB is the ceiling, and it is real.** The app boots at ~120 MB and the
+  prediction stack loads lazily on first use, reaching ~250–400 MB in practice.
+  Chroma's ONNX embedder is the largest runtime addition (~80 MB, downloaded on
+  first use) — drop `chromadb` from the slim requirements first if the service
+  starts OOMing.
+- **Free services spin down after 15 minutes idle** unless the keep-warm
+  workflow is running. The URL stays live either way; a cold visitor just waits.
+- **The disk is ephemeral.** SQLite ingestion history and the Chroma vector
+  store reset on every deploy and every spin-down. Anything that must survive
+  belongs in MySQL.
+- **The API is world-reachable.** That is what the static frontend needs, so
+  keep `AUTH_REQUIRED=true` and treat every route as publicly callable.
+- **Market-data quotas are the real ceiling**, not compute. Tune
+  `INGESTION_INTERVAL_MIN` and `INSIGHT_MAX_ASSETS` before sharing the link.
+- **Groq is now in the request path for sentiment.** A scoring pass is one call
+  per 20 headlines. At a 30-minute interval that is comfortable, but lowering
+  the interval multiplies LLM calls as well as market-data calls.
 - **Market-data quotas are the real ceiling**, not compute. Tune
   `INGESTION_INTERVAL_MIN` and `INSIGHT_MAX_ASSETS` before opening the link up.
 
 ## Verifying a deployment
 
 ```bash
-curl https://<service-url>/health
+curl https://<service>.onrender.com/health
 ```
 
 Check in the response:
 
 - `"agent": {"available": true, "provider": "openai"}` — the LLM key is live.
+  This also confirms sentiment scoring works, since it uses the same client.
 - `"scheduler": {"running": true}` — ingestion is up.
 - `"keys"` — each market-data provider that is configured.
 
 Then open the Pages URL and confirm the browser console is clean. A
 `CHANGE-ME` error there means step 4.1 was missed; a CORS error means the
 service's `CORS_ORIGINS` does not list the Pages domain.
+
+The first load after an idle period is slow by design — see *Keeping it warm*.
+The static site appears immediately either way; only the data panels wait.

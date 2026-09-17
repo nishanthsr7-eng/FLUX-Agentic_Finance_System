@@ -1,13 +1,20 @@
-# FLUX backend — container image for Google Cloud Run.
+# FLUX backend — container image.
 #
-# torch + transformers (FinBERT) + chromadb + xgboost is a ~2 GB install that
-# the 512 MB free tiers on Render/Fly/Railway cannot hold. Hugging Face Spaces
-# used to be the free home for this, but Docker Spaces moved behind PRO in
-# July 2026. Cloud Run's free tier allows 2–4 GiB per instance and scales to
-# zero, so an idle demo costs nothing.
+# Two builds from one file, selected by the FULL build arg:
 #
-# Build and run locally the way Cloud Run does:
-#   docker build -t flux-api .
+#   slim (default)  backend/requirements-slim.txt, no torch. ~248 MB resident,
+#                   which fits Render's free 512 MB tier. FinBERT sentiment is
+#                   replaced by SENTIMENT_BACKEND=llm; the LSTM magnitude head
+#                   and the Chronos baseline are unavailable.
+#   full            backend/requirements.txt plus CPU torch. ~748 MB resident,
+#                   so it needs a host with 1 GB+.
+#
+# Hugging Face Spaces was the original target — it gave 16 GB free — but Docker
+# Spaces moved behind PRO in July 2026, and no remaining card-free tier fits the
+# full set. Hence the split.
+#
+#   docker build -t flux-api .                       # slim
+#   docker build --build-arg FULL=1 -t flux-api .    # full
 #   docker run --rm -p 8080:8080 -e PORT=8080 --env-file .env flux-api
 
 FROM python:3.11-slim
@@ -32,18 +39,28 @@ ENV HOME=/home/user \
 WORKDIR $HOME/app
 
 # ── Dependencies ─────────────────────────────────────────────────────────────
-# CPU-only torch first, on its own index. The default PyPI wheel bundles CUDA
-# and is ~2.5 GB — the CPU build is ~200 MB and Cloud Run's free tier has no
-# GPU anyway. Installing it up front means the torch>=2.2 pin in
-# requirements.txt is already satisfied and pip won't pull the CUDA wheel.
+# FULL=1 adds torch and the requirements.txt extras; the default is the slim set.
+ARG FULL=0
+
+# CPU-only torch first, on its own index, and only for the full build. The
+# default PyPI wheel bundles CUDA and is ~2.5 GB; the CPU build is ~200 MB and
+# no free tier has a GPU anyway. Installing it up front means the torch>=2.2
+# pin in requirements.txt is already satisfied and pip won't pull the CUDA wheel.
 # The version spec must stay quoted: RUN uses a shell, which would otherwise
 # read `torch>=2.2` as a redirect and write an empty file named "=2.2".
-RUN pip install --no-cache-dir --user \
-        --index-url https://download.pytorch.org/whl/cpu \
-        "torch>=2.2"
+RUN if [ "$FULL" = "1" ]; then \
+        pip install --no-cache-dir --user \
+            --index-url https://download.pytorch.org/whl/cpu \
+            "torch>=2.2"; \
+    fi
 
-COPY --chown=user backend/requirements.txt ./backend/requirements.txt
-RUN pip install --no-cache-dir --user -r backend/requirements.txt
+COPY --chown=user backend/requirements.txt      ./backend/requirements.txt
+COPY --chown=user backend/requirements-slim.txt ./backend/requirements-slim.txt
+RUN if [ "$FULL" = "1" ]; then \
+        pip install --no-cache-dir --user -r backend/requirements.txt; \
+    else \
+        pip install --no-cache-dir --user -r backend/requirements-slim.txt; \
+    fi
 
 # ── Application ──────────────────────────────────────────────────────────────
 COPY --chown=user backend ./backend
@@ -58,12 +75,12 @@ ENV DB_PATH=$HOME/app/data/flux_market.db \
 
 RUN mkdir -p $HOME/app/data/chroma $HOME/app/data/hf $HOME/app/data/cache
 
-# Cloud Run injects the port to listen on as $PORT and ignores EXPOSE; 8080 is
-# its default and the right fallback for a plain `docker run`.
+# Hosts inject the port to listen on as $PORT and ignore EXPOSE; 8080 is the
+# common default and the right fallback for a plain `docker run`.
 ENV PORT=8080
 EXPOSE 8080
 
-# Cloud Run health-checks the revision itself, so this only matters locally.
+# The platform health-checks the service itself, so this only matters locally.
 HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=3 \
     CMD curl -fsS http://localhost:${PORT}/health || exit 1
 

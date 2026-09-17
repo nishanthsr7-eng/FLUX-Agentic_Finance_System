@@ -57,6 +57,76 @@
     },
   };
 
+  /* ── Cold-start notice ────────────────────────────────────────────────────
+   * The API is hosted on a free tier that spins down after ~15 minutes idle,
+   * so the first request of a visit can take 30-60 s while the container wakes.
+   * The static site renders instantly either way, which makes the wait look
+   * like a hang rather than a cold start. This says which it is.
+   *
+   * Only shown after a request has been slow for 2.5 s — a warm backend
+   * answers in well under that, so day-to-day use never sees it.
+   */
+  const FluxWaking = (function () {
+    let inFlight = 0, timer = null, el = null;
+
+    function node() {
+      if (el) return el;
+      el = document.createElement('div');
+      el.id = 'flux-waking';
+      el.setAttribute('role', 'status');
+      el.setAttribute('aria-live', 'polite');
+      el.innerHTML =
+        '<span class="flux-waking__dot"></span>' +
+        '<span>Waking the server — first load takes up to a minute.</span>';
+      // Inlined so the notice works on every page without a CSS import, and
+      // cannot be broken by a page stylesheet that loads later.
+      el.style.cssText = [
+        'position:fixed', 'left:50%', 'bottom:24px', 'transform:translateX(-50%)',
+        'z-index:9999', 'display:flex', 'gap:10px', 'align-items:center',
+        'padding:10px 16px', 'border-radius:999px',
+        'background:rgba(17,17,20,.92)', 'color:#fff',
+        'font:500 13px/1.4 system-ui,-apple-system,sans-serif',
+        'box-shadow:0 6px 24px rgba(0,0,0,.28)',
+        'backdrop-filter:blur(6px)',
+      ].join(';');
+      const dot = el.querySelector('.flux-waking__dot');
+      dot.style.cssText =
+        'width:8px;height:8px;border-radius:50%;background:#4ade80;' +
+        'animation:flux-waking-pulse 1.2s ease-in-out infinite';
+      const style = document.createElement('style');
+      style.textContent =
+        '@keyframes flux-waking-pulse{0%,100%{opacity:1}50%{opacity:.25}}' +
+        '@media (prefers-reduced-motion:reduce){.flux-waking__dot{animation:none}}';
+      document.head.appendChild(style);
+      return el;
+    }
+
+    function show() {
+      if (document.body && !document.getElementById('flux-waking')) {
+        document.body.appendChild(node());
+      }
+    }
+    function hide() {
+      const n = document.getElementById('flux-waking');
+      if (n) n.remove();
+    }
+
+    return {
+      start() {
+        inFlight += 1;
+        if (timer === null) timer = setTimeout(show, 2500);
+      },
+      end() {
+        inFlight = Math.max(0, inFlight - 1);
+        if (inFlight === 0) {
+          clearTimeout(timer);
+          timer = null;
+          hide();
+        }
+      },
+    };
+  })();
+
   const _origFetch = window.fetch.bind(window);
   window.fetch = function (input, init) {
     const url = typeof input === 'string' ? input : (input && input.url) || '';
@@ -67,6 +137,7 @@
     if (token) {
       opts.headers = Object.assign({}, opts.headers, { 'Authorization': 'Bearer ' + token });
     }
+    FluxWaking.start();
     return _origFetch(input, opts).then((res) => {
       // Expired/missing session on a protected route → go log in. /auth/*
       // is excluded so a failed login attempt doesn't redirect-loop.
@@ -77,7 +148,7 @@
         }
       }
       return res;
-    });
+    }).finally(() => FluxWaking.end());
   };
 
   // Global sign-out: any .logout-btn click ends the session before navigating.

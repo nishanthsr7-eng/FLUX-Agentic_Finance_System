@@ -42,7 +42,13 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = ""
     LLM_BASE_URL: str = "https://api.groq.com/openai/v1"
     LLM_API_KEY:  str = ""
-    LLM_MODEL:    str = "llama-3.3-70b-versatile"
+    LLM_MODEL:    str = "openai/gpt-oss-120b"
+
+    # ── News sentiment backend (Layer 2c) ────────────────────
+    # "auto"         — FinBERT/CryptoBERT if torch is installed, else the LLM
+    # "transformers" — force the local models (needs torch, ~445 MB resident)
+    # "llm"          — force the chat model, which is what fits a 512 MB host
+    SENTIMENT_BACKEND: str = "auto"
 
     # ── CORS ─────────────────────────────────────────────────
     # Dev frontend origins only — widen explicitly via .env for deployment,

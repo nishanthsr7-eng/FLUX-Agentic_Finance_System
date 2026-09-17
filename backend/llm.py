@@ -22,7 +22,7 @@ otherwise it falls back to Ollama. ``LLM_PROVIDER`` forces one explicitly.
     # hosted, e.g. Groq
     LLM_BASE_URL=https://api.groq.com/openai/v1
     LLM_API_KEY=gsk_...
-    LLM_MODEL=llama-3.3-70b-versatile
+    LLM_MODEL=openai/gpt-oss-120b
 
 Both transports expose the same three calls, so the route handlers don't care
 which one is live:
@@ -76,7 +76,7 @@ def provider() -> str:
 def model_name() -> str:
     """The model id the active provider will be asked for."""
     if provider() == "openai":
-        return settings.LLM_MODEL or "llama-3.3-70b-versatile"
+        return settings.LLM_MODEL or "openai/gpt-oss-120b"
     return settings.OLLAMA_MODEL
 
 

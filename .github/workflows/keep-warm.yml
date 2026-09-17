@@ -1,0 +1,55 @@
+name: Keep the API warm
+
+# Render's free plan spins a service down after 15 minutes without traffic, and
+# the next request then waits ~30-60 s for a cold start. That is a poor first
+# impression for anyone opening the deployed site.
+#
+# The free plan allows 750 instance-hours per month per workspace and a month is
+# 730 hours, so one service can stay up continuously and still fit — with about
+# 20 hours to spare. This job pings /health often enough to prevent the spin-down.
+#
+# IMPORTANT: that headroom assumes flux-api is the ONLY service in the Render
+# workspace. Add a second free service and the two together exceed 750 hours,
+# and both get suspended for the rest of the month.
+#
+# Setup: add a repository variable (not a secret — it is a public URL) named
+# FLUX_API_URL, e.g. https://flux-api.onrender.com
+#   Settings -> Secrets and variables -> Actions -> Variables -> New variable
+
+on:
+  schedule:
+    # Every 10 minutes. GitHub's scheduler is best-effort and can run several
+    # minutes late under load, so 10 leaves margin against the 15-minute idle
+    # timeout; a 14-minute interval would drift into spin-downs.
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keep-warm
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    name: Ping /health
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake the service
+        env:
+          URL: ${{ vars.FLUX_API_URL }}
+        run: |
+          if [ -z "$URL" ]; then
+            echo "::warning::FLUX_API_URL is not set — nothing to ping."
+            exit 0
+          fi
+
+          # --max-time 90 because a cold start legitimately takes ~60 s; the
+          # retries cover a spin-up that outlasts even that. A failure here is
+          # not worth failing the workflow over — it is a warm-up, not a test.
+          if curl -fsS --max-time 90 --retry 2 --retry-delay 15 "$URL/health" -o /dev/null; then
+            echo "Service is awake."
+          else
+            echo "::warning::Ping failed — the service may be suspended or redeploying."
+          fi

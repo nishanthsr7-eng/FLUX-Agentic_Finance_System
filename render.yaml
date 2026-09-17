@@ -1,0 +1,87 @@
+# Render blueprint — free-tier deployment of the FLUX backend.
+#
+# Render reads this when you create a Blueprint from the repo, so the service
+# arrives configured rather than needing a dozen dashboard fields set by hand.
+#
+# The free plan gives 512 MB RAM and 0.1 CPU, which is why the image builds
+# slim (no torch) and SENTIMENT_BACKEND is pinned to llm. See
+# backend/requirements-slim.txt for exactly what that trades away.
+#
+# Secrets are deliberately NOT here — sync:false means Render prompts for them
+# on first deploy and stores them itself. Nothing sensitive belongs in a file
+# that is committed to a public repo.
+
+services:
+  - type: web
+    name: flux-api
+    runtime: docker
+    plan: free
+    region: singapore          # same region as the TiDB Serverless cluster;
+                               # the API is chattier with MySQL than with users
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+
+    envVars:
+      # ── LLM (chat, insights, and news sentiment) ──────────────────────────
+      - key: LLM_BASE_URL
+        value: https://api.groq.com/openai/v1
+      - key: LLM_MODEL
+        value: openai/gpt-oss-120b
+      - key: LLM_API_KEY
+        sync: false
+
+      # Layer 2c runs through the chat model here: FinBERT needs torch, and
+      # torch needs 445 MB this plan does not have.
+      - key: SENTIMENT_BACKEND
+        value: llm
+
+      # ── MySQL (TiDB Serverless) ───────────────────────────────────────────
+      - key: MYSQL_HOST
+        sync: false
+      - key: MYSQL_PORT
+        value: "4000"
+      - key: MYSQL_USER
+        sync: false
+      - key: MYSQL_PASSWORD
+        sync: false
+      - key: MYSQL_DB
+        value: flux
+      - key: MYSQL_SSL
+        value: "true"
+
+      # ── Auth ──────────────────────────────────────────────────────────────
+      - key: AUTH_REQUIRED
+        value: "true"
+      - key: AUTH_SECRET
+        generateValue: true     # Render generates and stores a random secret
+
+      # ── Ingestion ─────────────────────────────────────────────────────────
+      # 30 minutes, not the 5-minute default: nine scheduler jobs at 5 minutes
+      # exhaust NewsAPI's 100 requests/day within hours. Market-data quota is
+      # the binding constraint on this deployment, not compute.
+      - key: INGESTION_ENABLED
+        value: "true"
+      - key: INGESTION_INTERVAL_MIN
+        value: "30"
+      - key: INSIGHT_MAX_ASSETS
+        value: "4"              # trimmed from 6 — each one costs an LLM call
+
+      # ── CORS ──────────────────────────────────────────────────────────────
+      # Set to the Cloudflare Pages origin once that project exists. Until then
+      # the browser will block every cross-origin call from the deployed site.
+      - key: CORS_ORIGINS
+        sync: false
+
+      # ── Market data ───────────────────────────────────────────────────────
+      - key: FINNHUB_API_KEY
+        sync: false
+      - key: COINGECKO_API_KEY
+        sync: false
+      - key: ALPHA_VANTAGE_API_KEY
+        sync: false
+      - key: NEWSAPI_KEY
+        sync: false
+      - key: FRED_API_KEY
+        sync: false

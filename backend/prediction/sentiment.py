@@ -1,16 +1,25 @@
 """
 FLUX Prediction — News Sentiment (Layer 2c)
 ===========================================
-Scores financial news with FinBERT (ProsusAI/finbert) and aggregates a per-symbol
-sentiment signal in [-1, +1]. This is a REAL-TIME signal fused at inference/agent time
-(news history is too short to train on), orthogonal to the price/macro model.
+Scores financial news and aggregates a per-symbol sentiment signal in [-1, +1].
+This is a REAL-TIME signal fused at inference/agent time (news history is too short
+to train on), orthogonal to the price/macro model.
+
+Two interchangeable backends, chosen by SENTIMENT_BACKEND:
+
+  * "transformers" — FinBERT/CryptoBERT locally. Calibrated probabilities, and
+    the better signal, but it needs torch (~445 MB resident).
+  * "llm"          — the configured chat model (Groq et al) scores the headline.
+    Coarser, but it runs where torch does not fit.
+  * "auto"         — transformers when importable, else llm, else no-op.
 
 Sources (all free, keys already in .env):
   • news_cache         — general finance headlines already ingested (NewsAPI)
   • Finnhub company-news — per-ticker articles (better symbol-specific signal)
 
 Public API:
-    score_texts(texts)            -> [(label, signed_score), ...]
+    score_texts(texts)            -> [(label, signed_score), ...]   (transformers only)
+    await ascore_texts(texts)     -> [(label, signed_score), ...]   (either backend)
     await score_news_cache()      -> int (rows scored into news_sentiment)
     await refresh_symbol(symbol)  -> fetch+score Finnhub company-news for one ticker
     await symbol_sentiment(sym)   -> {'score','label','n','as_of'} aggregate
@@ -26,6 +35,7 @@ import httpx
 
 from ..config import settings
 from ..db import insert_sentiment, get_unscored_news, get_symbol_sentiment
+from . import sentiment_llm
 from .datasources import CRYPTO_SYMBOLS
 
 log = logging.getLogger("flux.prediction.sentiment")
@@ -35,6 +45,7 @@ log = logging.getLogger("flux.prediction.sentiment")
 # is scored by the model that understands its domain (equity -> FinBERT, crypto -> CryptoBERT).
 _MODELS = {"equity": "ProsusAI/finbert", "crypto": "ElKulako/cryptobert"}
 _pipes: dict[str, object] = {}     # asset_type -> loaded pipeline (lazy, cached)
+_HAS_TRANSFORMERS: bool | None = None   # resolved once by _transformers_available()
 
 # Label-vocabulary normalisation: FinBERT emits positive/negative/neutral; CryptoBERT bullish/bearish/
 # neutral. Map both onto a signed score = P(bullish-ish) - P(bearish-ish) in [-1, 1].
@@ -52,6 +63,30 @@ _SYMBOL_KEYWORDS = {
 def _asset_type(symbol: str) -> str:
     """'crypto' if the symbol is in the crypto universe, else 'equity'."""
     return "crypto" if (symbol or "").upper() in CRYPTO_SYMBOLS else "equity"
+
+
+def _transformers_available() -> bool:
+    """True if the FinBERT path can actually run. Cached — importlib is not free."""
+    global _HAS_TRANSFORMERS
+    if _HAS_TRANSFORMERS is None:
+        from importlib.util import find_spec
+        _HAS_TRANSFORMERS = bool(find_spec("torch") and find_spec("transformers"))
+    return _HAS_TRANSFORMERS
+
+
+def backend() -> str:
+    """Which scorer is live: "transformers", "llm" or "none"."""
+    choice = (settings.SENTIMENT_BACKEND or "auto").strip().lower()
+    if choice == "transformers":
+        return "transformers" if _transformers_available() else "none"
+    if choice == "llm":
+        return "llm" if sentiment_llm.available() else "none"
+    # auto — prefer the calibrated model, fall back to the one that fits.
+    if _transformers_available():
+        return "transformers"
+    if sentiment_llm.available():
+        return "llm"
+    return "none"
 
 
 def _load_pipe(asset_type: str = "equity"):
@@ -115,6 +150,42 @@ def score_texts_routed(items: list[tuple[str, str]]) -> list[tuple[str, float]]:
     return [o if o is not None else ("neutral", 0.0) for o in out]
 
 
+async def ascore_texts(texts: list[str], asset_type: str = "equity") -> list[tuple[str, float]]:
+    """
+    Score texts with whichever backend is live.
+
+    The transformers pipeline is blocking and slow enough to stall the event
+    loop for seconds on a batch, so it runs in a worker thread; the LLM path is
+    already async. Returns all-neutral rather than raising when no backend is
+    configured — sentiment is one input to the agent, not a hard dependency.
+    """
+    if not texts:
+        return []
+    b = backend()
+    if b == "transformers":
+        import asyncio
+        return await asyncio.to_thread(score_texts, texts, asset_type)
+    if b == "llm":
+        return await sentiment_llm.score_texts_llm(texts, asset_type)
+    log.debug("No sentiment backend configured — %d texts scored neutral", len(texts))
+    return [("neutral", 0.0)] * len(texts)
+
+
+async def ascore_texts_routed(items: list[tuple[str, str]]) -> list[tuple[str, float]]:
+    """Async twin of score_texts_routed: route each text to its asset-class scorer."""
+    if not items:
+        return []
+    out: list[tuple[str, float] | None] = [None] * len(items)
+    groups: dict[str, list[int]] = {}
+    for i, (_txt, sym) in enumerate(items):
+        groups.setdefault(_asset_type(sym), []).append(i)
+    for atype, idxs in groups.items():
+        scored = await ascore_texts([items[i][0] for i in idxs], asset_type=atype)
+        for i, sc in zip(idxs, scored):
+            out[i] = sc
+    return [o if o is not None else ("neutral", 0.0) for o in out]
+
+
 def _map_symbol(text: str) -> str:
     """Best-effort map a headline to a ticker; '' = general market."""
     t = text.lower()
@@ -131,7 +202,7 @@ async def score_news_cache(limit: int = 200) -> int:
         return 0
     texts = [f"{r['title']} {r.get('summary', '')}".strip() for r in rows]
     syms = [_map_symbol(t) for t in texts]                     # route each headline to its asset model
-    scored = score_texts_routed(list(zip(texts, syms)))
+    scored = await ascore_texts_routed(list(zip(texts, syms)))
     ts = int(time.time() * 1000)
     out = []
     for r, sym, (label, signed) in zip(rows, syms, scored):
@@ -166,7 +237,7 @@ async def refresh_symbol(symbol: str, days: int = 14) -> int:
         return 0
 
     texts = [f"{a.get('headline','')} {a.get('summary','')}".strip() for a in articles]
-    scored = score_texts(texts, asset_type=_asset_type(symbol))   # FinBERT for equities, CryptoBERT for crypto
+    scored = await ascore_texts(texts, asset_type=_asset_type(symbol))
     ts = int(time.time() * 1000)
     out = []
     for a, (label, signed) in zip(articles, scored):
@@ -185,7 +256,8 @@ async def refresh_symbol(symbol: str, days: int = 14) -> int:
 async def refresh_reddit(symbol: str, limit: int = 40) -> int:
     """
     Retail-flow sentiment: pull recent r/wallstreetbets + r/stocks posts mentioning `symbol`,
-    score the titles with FinBERT, and store under source='reddit' in news_sentiment.
+    score the titles with the active sentiment backend, and store under
+    source='reddit' in news_sentiment.
 
     No-op (returns 0) unless BOTH Reddit client id AND secret are configured — so on this
     machine (empty secret) it stays a clean no-op. praw is read-only here; symbols are
@@ -223,7 +295,7 @@ async def refresh_reddit(symbol: str, limit: int = 40) -> int:
     if not titles:
         return 0
 
-    scored = score_texts(titles, asset_type=_asset_type(symbol))
+    scored = await ascore_texts(titles, asset_type=_asset_type(symbol))
     ts = int(time.time() * 1000)
     out = [{
         "url": f"reddit:{symbol.upper()}:{ts}:{i}", "symbol": symbol.upper(),
@@ -274,7 +346,8 @@ if __name__ == "__main__":
             "Shares plunge after the firm slashes outlook and warns of layoffs",
             "The board will meet next Tuesday to review the quarterly report",
         ]
-        for txt, (lab, sc) in zip(tests, score_texts(tests)):
+        print(f"Sentiment backend: {backend()}")
+        for txt, (lab, sc) in zip(tests, await ascore_texts(tests)):
             print(f"  [{lab:<8} {sc:+.3f}] {txt}")
         n = await score_news_cache()
         print(f"\nScored {n} cached news articles.")
