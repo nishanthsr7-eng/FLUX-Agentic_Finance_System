@@ -52,7 +52,17 @@ flux_market.db*
 *.gguf
 *.pkl
 *.pt
-backend/prediction/models/
+
+# …except the trained artifacts the prediction API loads at request time. They
+# are ~3.5 MB total and the deployed image is useless without them, so the
+# active model set is tracked despite the patterns above.
+!backend/prediction/models/*.pkl
+!backend/prediction/models/*.pt
+!backend/prediction/models/*.json
+
+# Archived and experimental training runs stay out — nothing serves from these.
+backend/prediction/models/baseline_backup/
+backend/prediction/models/fred_model_gate1/
 
 # Training datasets (multi-GB, re-downloadable — see docs/DATASETS.md)
 Dataset/

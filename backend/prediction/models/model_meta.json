@@ -1,0 +1,253 @@
+{
+  "feature_columns": [
+    "sma_5",
+    "sma_10",
+    "sma_20",
+    "sma_50",
+    "sma_200",
+    "macd",
+    "macd_signal",
+    "macd_hist",
+    "adx",
+    "rsi_14",
+    "stoch_k",
+    "stoch_d",
+    "roc_10",
+    "williams_r",
+    "bb_width",
+    "bb_pctb",
+    "atr_14",
+    "rvol_5",
+    "rvol_20",
+    "obv_slope",
+    "vol_ratio",
+    "mfi_14",
+    "logret_1",
+    "logret_5",
+    "logret_10",
+    "logret_20",
+    "gap",
+    "intraday_range",
+    "dow_sin",
+    "dow_cos",
+    "month_sin",
+    "month_cos",
+    "is_month_end",
+    "fd_logclose",
+    "spx_ret1",
+    "spx_ret5",
+    "spx_ret20",
+    "vix_z",
+    "vix_chg",
+    "tnx_chg",
+    "rs_1",
+    "rs_5"
+  ],
+  "meta_columns": [
+    "sma_5",
+    "sma_10",
+    "sma_20",
+    "sma_50",
+    "sma_200",
+    "macd",
+    "macd_signal",
+    "macd_hist",
+    "adx",
+    "rsi_14",
+    "stoch_k",
+    "stoch_d",
+    "roc_10",
+    "williams_r",
+    "bb_width",
+    "bb_pctb",
+    "atr_14",
+    "rvol_5",
+    "rvol_20",
+    "obv_slope",
+    "vol_ratio",
+    "mfi_14",
+    "logret_1",
+    "logret_5",
+    "logret_10",
+    "logret_20",
+    "gap",
+    "intraday_range",
+    "dow_sin",
+    "dow_cos",
+    "month_sin",
+    "month_cos",
+    "is_month_end",
+    "fd_logclose",
+    "spx_ret1",
+    "spx_ret5",
+    "spx_ret20",
+    "vix_z",
+    "vix_chg",
+    "tnx_chg",
+    "rs_1",
+    "rs_5",
+    "primary_p"
+  ],
+  "fd_orders": {
+    "AAPL": 0.1,
+    "ADA": 0.3,
+    "AMD": 0.1,
+    "AMZN": 0.2,
+    "AVAX": 0.3,
+    "BABA": 0.3,
+    "BNB": 0.4,
+    "BTC": 0.3,
+    "CRM": 0.3,
+    "DOGE": 0.3,
+    "DOT": 0.3,
+    "ETH": 0.3,
+    "GOOGL": 0.2,
+    "INTC": 0.3,
+    "JPM": 0.3,
+    "LINK": 0.3,
+    "LTC": 0.3,
+    "META": 0.3,
+    "MSFT": 0.3,
+    "NFLX": 0.3,
+    "NVDA": 0.1,
+    "ORCL": 0.3,
+    "SHIB": 0.1,
+    "SOL": 0.3,
+    "TRX": 0.2,
+    "TSLA": 0.3,
+    "TSM": 0.1,
+    "UNI": 0.2,
+    "XRP": 0.2
+  },
+  "horizon": 5,
+  "pt": 2.0,
+  "sl": 2.0,
+  "n_splits": 6,
+  "embargo": 7,
+  "metrics": {
+    "leak_overlaps": 0,
+    "n_oof": 118278,
+    "model_acc": 0.5263954412485838,
+    "model_auc": 0.5158404547146022,
+    "model_f1": 0.6250460183270079,
+    "confusion": [
+      [
+        15571,
+        39674
+      ],
+      [
+        16343,
+        46690
+      ]
+    ],
+    "persistence_acc": 0.49578958047988636,
+    "always_up_acc": 0.5329224369705271,
+    "majority_acc": 0.5329224369705271,
+    "ece_raw": 0.029821135086568706,
+    "ece_cal": 4.4251508447400248e-16,
+    "arima_acc": 0.5702270815811606,
+    "arima_drift": 0.5306980656013457,
+    "arima_edge": 0.03952901597981495
+  },
+  "meta_report": {
+    "meta_auc": 0.5167205794019099,
+    "act_all_precision": 0.5342171194097571,
+    "buckets": [
+      {
+        "thr": 0.5,
+        "coverage": 0.7509025270758123,
+        "precision": 0.538553488860866
+      },
+      {
+        "thr": 0.55,
+        "coverage": 0.44269199660689273,
+        "precision": 0.5499431830841559
+      },
+      {
+        "thr": 0.6,
+        "coverage": 0.18103805409244245,
+        "precision": 0.5590606952163016
+      }
+    ]
+  },
+  "conformal_report": {
+    "n_calib": 118278,
+    "mae": 0.05006933576254978,
+    "mae_predict_zero": 0.04972565207467827,
+    "half_width_sigma": {
+      "0.2": 1.0803372083051002,
+      "0.1": 1.3572268667612364
+    },
+    "coverage": {
+      "0.2": 0.8000219821099444,
+      "0.1": 0.9000236730414786
+    }
+  },
+  "conformal_alphas": [
+    0.2,
+    0.1
+  ],
+  "trained_at": 1780790172325,
+  "n_events": 137991,
+  "gate0_baseline": {
+    "note": "Locked price-only baseline FLUX-X must beat (FRED OFF = Phase 0). Deployable config = long-only edge-ranked top-decile + regime gate.",
+    "oof_auc": 0.5158404547146022,
+    "oof_acc": 0.5263954412485838,
+    "ece_raw": 0.029821135086568706,
+    "ece_cal": 4.4251508447400248e-16,
+    "precision_at_meta_0.60": 0.5590606952163016,
+    "deployable_sharpe": 0.8346266767033584,
+    "portfolio": {
+      "long_only_top10": {
+        "periods": 1268,
+        "avg_breadth": 17.36435331230284,
+        "sharpe": 0.8346266767033584,
+        "total_return": 441.5025963224036,
+        "ann_return": 0.36914033739927166,
+        "vol_per_period": 0.05318994947529649,
+        "max_dd": -0.6322463088961308,
+        "win_rate": 0.5623028391167192,
+        "profit_factor": 1.3898671926125192
+      },
+      "long_only_top10_regime": {
+        "periods": 1268,
+        "avg_breadth": 17.36435331230284,
+        "sharpe": 0.7881024681732892,
+        "total_return": 46.368822763455924,
+        "ann_return": 0.19775969983287078,
+        "vol_per_period": 0.032310494694816706,
+        "max_dd": -0.4544611042401041,
+        "win_rate": 0.5623028391167192,
+        "profit_factor": 1.4147531320528315
+      },
+      "long_short_top20": {
+        "periods": 1268,
+        "avg_breadth": 17.36435331230284,
+        "sharpe": 0.38587438739061647,
+        "total_return": 2.7819142275385165,
+        "ann_return": 0.07106251691459531,
+        "vol_per_period": 0.025077398906163947,
+        "max_dd": -0.4882175014324147,
+        "win_rate": 0.5315457413249212,
+        "profit_factor": 1.157472364821309
+      },
+      "benchmark_eqw_long": {
+        "periods": 1268,
+        "sharpe": 0.750604420411247,
+        "total_return": 57.03981366942662,
+        "ann_return": 0.21593607127234637,
+        "max_dd": -0.5714548641876196,
+        "win_rate": 0.5638801261829653
+      }
+    },
+    "recorded_at": 1780790241582
+  },
+  "gate1_decision": {
+    "phase": "Phase 1 \u2014 FRED macro activation",
+    "gate1_auc_ece": "PASS (AUC 0.5158->0.5206, +0.0048; calibrated ECE unchanged ~0; precision@0.60 0.559->0.562)",
+    "deployable_sharpe_ablation": "FRED HALVES cross-sectional Sharpe (price-only 0.906 -> +FRED 0.457 on identical panel)",
+    "decision": "FRED self-gated OFF for the cross-sectional ranker (FLUX_FRED_RANKER=1 to re-enable). Deployable = price-only 42-feat. Macro reserved for regime/sizing layer (Phase 6).",
+    "fred_model_record": "backend/prediction/models/fred_model_phase1/",
+    "flywheels_confirmed": "earnings gate + options IV/skew snapshot wired (scheduler job #8) and live-functional"
+  }
+}

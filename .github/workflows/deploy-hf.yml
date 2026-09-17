@@ -1,0 +1,92 @@
+name: Deploy backend to Hugging Face Spaces
+
+# Pushes the API to a Docker Space, which is the only free tier large enough for
+# this backend's dependency set (torch + transformers + chromadb ≈ 2 GB).
+#
+# One-time setup:
+#   1. Create a Docker Space:  https://huggingface.co/new-space  (SDK: Docker)
+#   2. Add repo secrets under Settings → Secrets and variables → Actions:
+#        HF_TOKEN     — a write token from https://huggingface.co/settings/tokens
+#        HF_USERNAME  — your Hugging Face username
+#        HF_SPACE     — the Space name (e.g. flux-api)
+#   3. Add the runtime secrets (LLM_API_KEY, MYSQL_*, …) in the Space's own
+#      Settings → Variables and secrets. They are never committed here.
+#
+# The Space needs YAML front matter in its README.md to configure itself. The
+# project README is not the right place for that, so this job generates a small
+# Space-specific README during the sync and leaves the repo's own untouched.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "Dockerfile"
+      - ".dockerignore"
+      - ".github/workflows/deploy-hf.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-hf
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Sync to Space
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The Space is updated by force-push, so only the current tree
+          # matters — but LFS-free full history keeps the push deterministic.
+          fetch-depth: 0
+
+      - name: Generate the Space README
+        env:
+          HF_SPACE: ${{ secrets.HF_SPACE }}
+        run: |
+          cat > README.md <<EOF
+          ---
+          title: FLUX Market API
+          emoji: ⚡
+          colorFrom: blue
+          colorTo: purple
+          sdk: docker
+          app_port: 7860
+          pinned: false
+          ---
+
+          # FLUX Market API
+
+          FastAPI backend for the FLUX Agentic Finance System — live market data,
+          a calibrated XGBoost prediction agent, and the RAG/insights layer.
+
+          Interactive docs: [\`/docs\`](./docs) · Liveness: [\`/health\`](./health)
+
+          Source: https://github.com/${{ github.repository }}
+          EOF
+
+      - name: Push to the Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_USERNAME: ${{ secrets.HF_USERNAME }}
+          HF_SPACE: ${{ secrets.HF_SPACE }}
+        run: |
+          if [ -z "$HF_TOKEN" ] || [ -z "$HF_USERNAME" ] || [ -z "$HF_SPACE" ]; then
+            echo "::error::HF_TOKEN, HF_USERNAME and HF_SPACE must all be set as repository secrets."
+            exit 1
+          fi
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Deploy ${{ github.sha }}" --allow-empty
+
+          # Spaces track their own history; a force push keeps the Space's tree
+          # identical to main rather than accumulating merge commits.
+          git push --force \
+            "https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE" \
+            HEAD:main
