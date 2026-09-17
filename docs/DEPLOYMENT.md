@@ -151,8 +151,12 @@ Variables*. Do not rely on it alone: GitHub queues scheduled workflows on
 shared runners and they drift, sometimes by hours, and GitHub disables
 scheduled workflows entirely after 60 days without a commit.
 
-A Cloudflare Worker cron trigger was also tried and never fired at all; see
-[DEPLOYMENT_RECORD.md](DEPLOYMENT_RECORD.md).
+A Cloudflare Worker cron trigger ([keep-warm-worker/](../keep-warm-worker/))
+is the third option and now the best of the three: it is version-controlled, it
+logs every run, and it sends GET. It did not fire at all when first deployed —
+see [DEPLOYMENT_RECORD.md](DEPLOYMENT_RECORD.md) — but it has been firing
+reliably since 2026-09-18. If you deploy it, turn on `[observability]` in
+`wrangler.toml`: without logs a silent cron and a broken one look identical.
 
 This only fits if `flux-api` is the **only** service in the Render workspace.
 A second free service pushes the pair past 750 hours and both get suspended for

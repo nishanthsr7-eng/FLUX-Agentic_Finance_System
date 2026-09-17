@@ -21,6 +21,7 @@ method is attached to any of them**.
 | Database | TiDB Serverless, `ap-southeast-1` | `gateway01.ap-southeast-1.prod.aws.tidbcloud.com:4000` |
 | LLM | Groq, `openai/gpt-oss-120b` | `https://api.groq.com/openai/v1` |
 | Keep-warm | UptimeRobot, 5-minute HTTP check | monitors `/health` |
+| Keep-warm | Cloudflare Worker `flux-warm`, `*/10 * * * *` | pings `/health`, logs each run |
 
 The backend and the database are both in Singapore on purpose: the API talks
 to MySQL far more than it talks to users, so the chatty leg is the one worth
@@ -112,7 +113,7 @@ next request then waits about 50 seconds. Three approaches were tried:
 |---|---|
 | **UptimeRobot**, 5-minute HTTP check | **In use.** Reliable, and it reports genuine downtime as a bonus. |
 | GitHub Actions cron (`.github/workflows/keep-warm.yml`) | Works, but drifts — a scheduled run went missing inside the first hour, and delays past two hours have happened on this repository. Left enabled as a backup. |
-| Cloudflare Worker cron trigger (`keep-warm-worker/`) | **Never fired.** See below. |
+| Cloudflare Worker cron trigger (`keep-warm-worker/`) | **Now working**, every 10 minutes, after an initial period of firing not at all. See below. |
 
 Note for later: GitHub disables scheduled workflows in public repositories
 after 60 days without commits, so the backup quietly stops if the project sits
@@ -166,9 +167,24 @@ Render's health check times out after 5 seconds; a free-tier cold start
 legitimately takes about 50. The first idle period therefore produces an alert
 for a service that is working correctly. Keep-warm is what stops it.
 
-### Cloudflare cron triggers never executed
+### Cloudflare cron triggers did not execute — then later did
 
-A Worker was written to replace the drifting GitHub cron. It never ran.
+A Worker was written to replace the drifting GitHub cron. It did not run at
+first, for reasons never established, and **it runs correctly now.** Both
+halves are recorded because the failure is worth recognising if it recurs.
+
+**Resolved, 2026-09-18.** `flux-warm` on `*/10 * * * *` fired at 20:00:22Z,
+20:10:18Z, 20:20:18Z and 20:30:19Z, each logging `ping 200 awake` — genuine
+scheduled invocations holding the boundary to within seconds, not `wrangler
+dev`. Nothing in the Worker's code or schedule was changed between the two
+states, which points at the cause having been account- or platform-side and
+since resolved.
+
+`[observability] enabled = true` in `wrangler.toml` is what makes any of this
+checkable. Worker logs are off by default, and without them a cron that fires
+and one that does not produce identical evidence: nothing.
+
+What the original failure looked like:
 
 - `wrangler deploy` reported `schedule: */10 * * * *`, and the dashboard showed
   the trigger with a Next time that advanced correctly.
@@ -181,8 +197,11 @@ A Worker was written to replace the drifting GitHub cron. It never ran.
   display) had all elapsed. Cron triggers are available on the free plan — the
   limit is 5 per account.
 
-No cause was found; it appears to be account- or platform-side. The worker
-remains in `keep-warm-worker/` as a record, and UptimeRobot does the job.
+No cause was ever found for that period. The worker is now firing on schedule
+alongside UptimeRobot, so keep-warm is currently doubled — harmless at ~144
+Worker requests/day against a 200,000/day free allowance. If consolidating onto
+one, the Worker is the better primary: version-controlled, logged, and it sends
+GET rather than UptimeRobot's HEAD.
 
 ### UptimeRobot reported the API as down while keeping it warm
 
