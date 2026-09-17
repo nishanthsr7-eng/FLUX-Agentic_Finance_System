@@ -379,7 +379,10 @@ async def cache_flush():
     return {"flushed": ["crypto", "stocks"]}
 
 
-@app.get("/health")
+# HEAD as well as GET: uptime monitors default to HEAD because it is cheaper,
+# and FastAPI — unlike plain Starlette — does not register it alongside GET, so
+# a GET-only route answers 405 and the monitor reports the service as down.
+@app.api_route("/health", methods=["GET", "HEAD"])
 async def health():
     from .ingestion import get_status as ingestion_status
     sched_jobs = []
