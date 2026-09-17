@@ -5,7 +5,7 @@
 # whole repo as a Worker project instead of building the static site. Deploy
 # this by running wrangler from inside this directory, never from the root.
 
-name = "flux-keep-warm"
+name = "flux-warm"
 main = "src/index.js"
 compatibility_date = "2026-09-17"
 
@@ -17,3 +17,10 @@ crons = ["*/10 * * * *"]
 
 [vars]
 FLUX_API_URL = "https://flux-api-vono.onrender.com"
+
+# Logs are off by default, which makes a silent cron indistinguishable from a
+# broken one. Declaring it here keeps the setting through redeploys — setting it
+# in the dashboard alone gets overwritten by the next `wrangler deploy`.
+# Free plan allows 200,000 events/day; this worker produces about 144.
+[observability]
+enabled = true

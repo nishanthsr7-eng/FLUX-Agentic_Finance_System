@@ -32,7 +32,14 @@ async function ping(url) {
 
 export default {
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(ping(env.FLUX_API_URL));
+    // Logged before the fetch so the entry appears even if the ping fails or
+    // the request is still in flight — otherwise a silent cron and a broken
+    // one look identical in the logs.
+    console.log(`cron fired: ${event.cron} at ${new Date().toISOString()}`);
+    // Awaited rather than handed to ctx.waitUntil(): the scheduled handler is
+    // already allowed to run to completion, and awaiting means the result is
+    // logged before the invocation ends.
+    await ping(env.FLUX_API_URL);
   },
 
   // Lets you verify the worker by opening its URL, rather than waiting ten
