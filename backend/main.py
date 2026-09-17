@@ -163,6 +163,53 @@ def get_client() -> httpx.AsyncClient:
 _scheduler = None   # APScheduler instance
 
 
+def _cached_assets() -> list[dict]:
+    """Flatten the crypto + stock caches into the shape the insight cycle wants.
+
+    Returns [] when ingestion has not populated the cache yet; every caller
+    treats that as "nothing to do" rather than an error.
+    """
+    crypto = cache.get("crypto") or []
+    stocks = cache.get("stocks") or []
+    return [
+        {
+            "symbol":     a["sub"],
+            "name":       a["name"],
+            "price":      a["price"],
+            "change_pct": a["change_pct"],
+            "asset_type": "crypto",
+        }
+        for a in crypto
+    ] + [
+        {
+            "symbol":     a["sub"],
+            "name":       a["name"],
+            "price":      a["price"],
+            "change_pct": a["change_pct"],
+            "asset_type": "stock",
+        }
+        for a in stocks
+    ]
+
+
+async def _insight_job() -> None:
+    """One AI insight cycle over the freshest cached assets.
+
+    The scheduler awaits this at the end of a market cycle, so by the time it
+    runs the cache was written moments ago. It is also what the manual
+    /ai/insights/refresh and /ingestion/trigger/insights routes call.
+    """
+    from .insights import run_insight_cycle
+    all_assets = _cached_assets()
+    if not all_assets:
+        log.debug("Insight job skipped — cache not warm yet")
+        return
+    generated = await run_insight_cycle(all_assets, settings.INSIGHT_MAX_ASSETS)
+    # Also embed the freshest market snapshots into ChromaDB
+    embed_market_snapshots(all_assets)
+    log.info("Insight cycle complete: %d insights generated", len(generated))
+
+
 @app.on_event("startup")
 async def startup_event():
     # 0. Auth schema (users.password_hash) + demo-user credential seed
@@ -182,39 +229,8 @@ async def startup_event():
         log.info("Ingestion scheduler disabled (INGESTION_ENABLED=false)")
         return
 
-    # 3. Insight job depends on cache being warm, so wrap with guard
-    async def _insight_job():
-        from .insights import run_insight_cycle
-        crypto = cache.get("crypto") or []
-        stocks = cache.get("stocks") or []
-        all_assets = [
-            {
-                "symbol":     a["sub"],
-                "name":       a["name"],
-                "price":      a["price"],
-                "change_pct": a["change_pct"],
-                "asset_type": "crypto",
-            }
-            for a in crypto
-        ] + [
-            {
-                "symbol":     a["sub"],
-                "name":       a["name"],
-                "price":      a["price"],
-                "change_pct": a["change_pct"],
-                "asset_type": "stock",
-            }
-            for a in stocks
-        ]
-        if all_assets:
-            generated = await run_insight_cycle(all_assets, settings.INSIGHT_MAX_ASSETS)
-            # Also embed the freshest market snapshots into ChromaDB
-            embed_market_snapshots(all_assets)
-            log.info("Insight cycle complete: %d insights generated", len(generated))
-        else:
-            log.debug("Insight job skipped — cache not warm yet")
-
-    # 4. Build and start the scheduler
+    # 3. Build and start the scheduler. The insight cycle is passed in and
+    #    chained onto the market cycle there — see ingestion.build_scheduler.
     from .ingestion import build_scheduler
     global _scheduler
     _scheduler = build_scheduler(insight_job_fn=_insight_job)
@@ -647,18 +663,33 @@ async def ingestion_status_endpoint():
 async def ingestion_trigger(job: str):
     """
     Manually trigger a specific ingestion job immediately.
-    job: crypto | stocks | ohlcv | news | insights
+    job: crypto | stocks | ohlcv | news | market | insights | predictions
+
+    predictions is the manual lever for the heavy FLUX-X cycle, which no longer
+    runs itself on startup (HEAVY_JOBS_ON_STARTUP) — on a 512 MB host that run
+    was the difference between one OOM kill and a restart loop.
     """
     from .ingestion import (
         ingest_crypto, ingest_stocks, ingest_ohlcv,
         ingest_news, full_market_cycle,
     )
+
+    async def _predictions():
+        from .prediction.flux_x import run_flux_x
+        try:
+            res = await run_flux_x()
+            log.info("manual prediction cycle: %s", res)
+        except Exception as exc:
+            log.warning("manual prediction cycle failed: %s", exc)
+
     job_map = {
-        "crypto":  ingest_crypto,
-        "stocks":  ingest_stocks,
-        "ohlcv":   ingest_ohlcv,
-        "news":    ingest_news,
-        "market":  full_market_cycle,
+        "crypto":      ingest_crypto,
+        "stocks":      ingest_stocks,
+        "ohlcv":       ingest_ohlcv,
+        "news":        ingest_news,
+        "market":      full_market_cycle,
+        "insights":    _insight_job,
+        "predictions": _predictions,
     }
     if job not in job_map:
         raise HTTPException(400, f"Unknown job '{job}'. Valid: {list(job_map)}")
@@ -684,23 +715,11 @@ async def ai_insights_list(
 @app.post("/ai/insights/refresh")
 async def ai_insights_refresh():
     """Trigger an immediate AI insight generation cycle (non-blocking)."""
-    from .insights import run_insight_cycle
-
-    crypto = cache.get("crypto") or []
-    stocks = cache.get("stocks") or []
-    all_assets = [
-        {"symbol": a["sub"], "name": a["name"],
-         "price": a["price"], "change_pct": a["change_pct"], "asset_type": "crypto"}
-        for a in crypto
-    ] + [
-        {"symbol": a["sub"], "name": a["name"],
-         "price": a["price"], "change_pct": a["change_pct"], "asset_type": "stock"}
-        for a in stocks
-    ]
+    all_assets = _cached_assets()
     if not all_assets:
         raise HTTPException(503, "No asset data in cache yet — wait for the first ingestion cycle")
 
-    asyncio.create_task(run_insight_cycle(all_assets, settings.INSIGHT_MAX_ASSETS))
+    asyncio.create_task(_insight_job())
     return {
         "status":    "refresh_started",
         "assets":    len(all_assets),

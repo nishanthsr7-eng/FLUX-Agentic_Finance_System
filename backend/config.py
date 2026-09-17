@@ -86,10 +86,30 @@ class Settings(BaseSettings):
     MYSQL_SSL_CA:   str = ""
 
     # ── Ingestion ─────────────────────────────────────────────
+    # Every interval below is honoured by ingestion.build_scheduler. They used
+    # to be hardcoded there, which quietly ignored INGESTION_INTERVAL_MIN and
+    # burned the NewsAPI free quota (100 req/day) in a few hours.
     INGESTION_ENABLED:        bool = True
     INGESTION_INTERVAL_MIN:   int  = 5    # crypto + stocks cycle
+    OHLCV_INTERVAL_MIN:       int  = 30   # 30-day daily bars
+    NEWS_INTERVAL_MIN:        int  = 15   # NewsAPI headlines
     INSIGHT_MAX_ASSETS:       int  = 6    # top movers to analyse per cycle
+    # The insight cycle is chained onto the market cycle rather than scheduled
+    # independently, so it always reads a cache that was just refreshed. This
+    # is the minimum gap between two chained runs, not a trigger of its own.
+    INSIGHT_INTERVAL_MIN:     int  = 15
     SNAPSHOT_RETENTION_DAYS:  int  = 7    # prune older price_snapshots
+
+    # ── Memory budget (512 MB hosts) ──────────────────────────
+    # The prediction cycle, the drift retrain and the options snapshot are the
+    # heaviest things this process does. Running them a few minutes after boot
+    # is convenient in development and fatal on a 512 MB box, where it turns a
+    # single OOM into a restart loop. Deployment sets this false and relies on
+    # the cron triggers plus POST /ingestion/trigger/{job}.
+    HEAVY_JOBS_ON_STARTUP:    bool = True
+    # One switch to take ChromaDB (and its ~80 MB ONNX embedder) out of the
+    # process entirely, without a redeploy, if the host still runs out of room.
+    RAG_ENABLED:              bool = True
 
     model_config = {
         "env_file": str(Path(__file__).parent.parent / ".env"),

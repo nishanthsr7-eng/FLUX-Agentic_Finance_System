@@ -1,11 +1,15 @@
 """
 FLUX Data Ingestion Scheduler
 ------------------------------
-Uses APScheduler (AsyncIOScheduler) to pull live data every 5 minutes:
-  • CoinGecko  → crypto price snapshots    → SQLite
-  • Finnhub    → stock price snapshots     → SQLite
-  • yfinance   → 30-day daily OHLCV        → SQLite  (every 30 min)
-  • NewsAPI    → finance headlines         → SQLite  (every 15 min)
+Uses APScheduler (AsyncIOScheduler). Every interval is a setting — the
+defaults are shown, and deployment widens them to stay inside free API quotas:
+  • CoinGecko  → crypto price snapshots    → SQLite  (INGESTION_INTERVAL_MIN, 5)
+  • Finnhub    → stock price snapshots     → SQLite  (INGESTION_INTERVAL_MIN, 5)
+  • yfinance   → 30-day daily OHLCV        → SQLite  (OHLCV_INTERVAL_MIN, 30)
+  • NewsAPI    → finance headlines         → SQLite  (NEWS_INTERVAL_MIN, 15)
+
+The AI insight cycle has no trigger of its own: it is chained onto the market
+cycle (throttled to INSIGHT_INTERVAL_MIN) so it always reads a fresh cache.
 
 All jobs also update the in-memory cache (same TTLs as the live endpoints)
 so the existing /market/* routes always return fresh data.
@@ -412,7 +416,7 @@ async def ingest_news() -> list[dict]:
 
 # ── Combined cycle (used by scheduler) ───────────────────────────────────────
 async def full_market_cycle() -> dict:
-    """Run crypto + stocks ingestion together. Called every 5 min."""
+    """Run crypto + stocks ingestion together. Called every INGESTION_INTERVAL_MIN."""
     crypto = await ingest_crypto()
     stocks = await ingest_stocks()
     return {"crypto": len(crypto), "stocks": len(stocks)}
@@ -422,56 +426,96 @@ async def full_market_cycle() -> dict:
 def build_scheduler(insight_job_fn=None):
     """
     Build and return a configured AsyncIOScheduler.
-    Pass insight_job_fn to schedule the RAG insight cycle.
+
+    Pass insight_job_fn to enable the RAG insight cycle. It is *chained* onto
+    the market cycle rather than given a trigger of its own: the insight job
+    reads the in-memory cache that ingestion has just written, so scheduling
+    the two independently raced — on a cold start the insight run fired against
+    an empty cache and silently produced nothing. Chaining also caps how much
+    runs at once, which matters more than the schedule on a 512 MB host.
+
+    Every interval comes from settings; nothing here is hardcoded any more.
     """
     from apscheduler.schedulers.asyncio import AsyncIOScheduler
     from apscheduler.triggers.interval import IntervalTrigger
+    from apscheduler.triggers.cron import CronTrigger
 
     scheduler = AsyncIOScheduler(timezone="UTC")
 
-    # 1) Market data every 5 min — first run immediately
+    market_min  = max(1, settings.INGESTION_INTERVAL_MIN)
+    ohlcv_min   = max(market_min, settings.OHLCV_INTERVAL_MIN)
+    news_min    = max(market_min, settings.NEWS_INTERVAL_MIN)
+    insight_min = max(market_min, settings.INSIGHT_INTERVAL_MIN)
+    heavy_boot  = settings.HEAVY_JOBS_ON_STARTUP
+
+    def _boot_run(minutes: int) -> dict:
+        """Kwargs for a one-off run shortly after startup, or nothing at all.
+
+        APScheduler treats an explicit next_run_time=None as "create this job
+        paused", which is not what we want — so the key has to be absent, not
+        None, when HEAVY_JOBS_ON_STARTUP is off. The cron trigger still fires.
+        """
+        if not heavy_boot:
+            return {}
+        return {"next_run_time": datetime.utcnow() + timedelta(minutes=minutes)}
+
+    # 1) Market data + (chained) insights.
+    #
+    # _last_insight is the throttle: the market cycle may run every 5 minutes
+    # while insights only need to run every 15, and each insight costs an LLM
+    # call per asset. Awaiting the insight fn inline, inside the same job, is
+    # deliberate — it guarantees the cache it reads is the one this job just
+    # wrote, and a slow LLM delays the next insight instead of stacking one.
+    _last_insight = [0.0]
+
+    async def market_cycle_job() -> dict:
+        res = await full_market_cycle()
+        if insight_job_fn is None:
+            return res
+        now = time.time()
+        if now - _last_insight[0] < insight_min * 60:
+            return res
+        _last_insight[0] = now
+        try:
+            await insight_job_fn()
+        except Exception as exc:              # never let insights kill ingestion
+            log.warning("insight cycle failed: %s", exc)
+        return res
+
     scheduler.add_job(
-        full_market_cycle,
-        trigger=IntervalTrigger(minutes=5),
+        market_cycle_job,
+        trigger=IntervalTrigger(minutes=market_min),
         id="market_cycle",
         next_run_time=datetime.utcnow(),
         misfire_grace_time=60,
         coalesce=True,
+        max_instances=1,
     )
 
-    # 2) OHLCV every 30 min — first run 2 min after startup
+    # 2) OHLCV — first run 2 min after startup
     scheduler.add_job(
         ingest_ohlcv,
-        trigger=IntervalTrigger(minutes=30),
+        trigger=IntervalTrigger(minutes=ohlcv_min),
         id="ohlcv",
         next_run_time=datetime.utcnow() + timedelta(minutes=2),
         misfire_grace_time=120,
         coalesce=True,
+        max_instances=1,
     )
 
-    # 3) News every 15 min — first run 3 min after startup
+    # 3) News — first run 3 min after startup. NewsAPI's free plan allows 100
+    #    requests/day, so anything under ~15 minutes exhausts it before evening.
     scheduler.add_job(
         ingest_news,
-        trigger=IntervalTrigger(minutes=15),
+        trigger=IntervalTrigger(minutes=news_min),
         id="news",
         next_run_time=datetime.utcnow() + timedelta(minutes=3),
         misfire_grace_time=120,
         coalesce=True,
+        max_instances=1,
     )
 
-    # 4) AI insight cycle every 15 min — first run 5 min after startup
-    if insight_job_fn is not None:
-        scheduler.add_job(
-            insight_job_fn,
-            trigger=IntervalTrigger(minutes=15),
-            id="insights",
-            next_run_time=datetime.utcnow() + timedelta(minutes=5),
-            misfire_grace_time=120,
-            coalesce=True,
-        )
-
-    # 5) Prune old snapshots daily at midnight UTC
-    from apscheduler.triggers.cron import CronTrigger
+    # 4) Prune old snapshots daily at midnight UTC
     from .db import prune_old_snapshots
     scheduler.add_job(
         prune_old_snapshots,
@@ -480,22 +524,31 @@ def build_scheduler(insight_job_fn=None):
         coalesce=True,
     )
 
-    # 5b) ohlcv_history daily append — daily at 00:10 UTC, before options_iv (00:20)
-    #     and the prediction cycle (00:30) so they read fresh closes. Runs once
-    #     ~1 min after startup too, so this dev session unblocks immediately.
+    # 5) ohlcv_history daily append — daily at 00:10 UTC, before options_iv
+    #    (00:20) and the prediction cycle (00:30) so they read fresh closes.
     scheduler.add_job(
         ingest_history_daily,
         trigger=CronTrigger(hour=0, minute=10, timezone="UTC"),
         id="ohlcv_history",
-        next_run_time=datetime.utcnow() + timedelta(minutes=1),
+        **_boot_run(1),
         misfire_grace_time=600,
         coalesce=True,
+        max_instances=1,
     )
 
     # 6) Prediction cycle daily at 00:30 UTC — the full FLUX-X §4 loop: resolve matured predictions
     #    → log a fresh batch (steps 1–7) → construct the cross-sectional book (step 8) → red-team
     #    its top-k (step 9) → paper dry-run (step 10). Runs only if the trained model artifacts are
     #    present (skips cleanly otherwise).
+    #
+    #    HEAVY_JOBS_ON_STARTUP gates the boot-time run of this and the two jobs
+    #    around it. On a 512 MB host it must be false. The imports are cheap
+    #    (~17 MB measured); the *run* is not — it loads price history into
+    #    dataframes and fits an HMM and a GARCH per asset, on top of a process
+    #    already holding FastAPI, pandas and the ONNX embedder. Doing that a
+    #    few minutes after every boot is what turns one OOM kill into a restart
+    #    loop, because each restart schedules it again. The cron trigger is
+    #    unaffected and POST /ingestion/trigger/predictions runs it on demand.
     from pathlib import Path as _Path
     if (_Path(__file__).parent / "prediction" / "models" / "xgb_primary.json").exists():
         async def prediction_job():
@@ -510,9 +563,10 @@ def build_scheduler(insight_job_fn=None):
             prediction_job,
             trigger=CronTrigger(hour=0, minute=30, timezone="UTC"),
             id="predictions",
-            next_run_time=datetime.utcnow() + timedelta(minutes=8),
+            **_boot_run(8),
             misfire_grace_time=600,
             coalesce=True,
+            max_instances=1,
         )
 
         # 7) Drift-triggered retrain — weekly (Sun 02:00 UTC). Retrains ONLY if live accuracy/
@@ -533,6 +587,7 @@ def build_scheduler(insight_job_fn=None):
             id="drift_retrain",
             misfire_grace_time=3600,
             coalesce=True,
+            max_instances=1,
         )
 
         # 8) Options IV/skew snapshot — daily at 00:20 UTC, just before the prediction cycle so
@@ -550,9 +605,10 @@ def build_scheduler(insight_job_fn=None):
             options_iv_job,
             trigger=CronTrigger(hour=0, minute=20, timezone="UTC"),
             id="options_iv",
-            next_run_time=datetime.utcnow() + timedelta(minutes=5),
+            **_boot_run(5),
             misfire_grace_time=600,
             coalesce=True,
+            max_instances=1,
         )
 
     return scheduler

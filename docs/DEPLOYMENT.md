@@ -160,10 +160,37 @@ the rest of the month.
 
 ### Raise the ingestion interval
 
-The blueprint already sets `INGESTION_INTERVAL_MIN=30`. Do not lower it. The
-scheduler runs nine jobs; at the 5-minute default a public deployment exhausts
-the free market-data quotas (Finnhub 60 requests/minute, NewsAPI 100 per day)
-within hours. Market-data quota is the binding constraint here, not compute.
+The blueprint sets the four interval keys below. Do not lower them. At the
+development defaults a public deployment exhausts the free market-data quotas
+(Finnhub 60 requests/minute, NewsAPI 100 per day) within hours. Market-data
+quota is the binding constraint here, not compute.
+
+| Key | Deployed | Effect |
+|---|---|---|
+| `INGESTION_INTERVAL_MIN` | 30 | crypto + stocks, 48 cycles/day |
+| `OHLCV_INTERVAL_MIN` | 60 | yfinance daily bars |
+| `NEWS_INTERVAL_MIN` | 60 | 24 NewsAPI calls/day against a cap of 100 |
+| `INSIGHT_INTERVAL_MIN` | 60 | LLM insight cycle, chained to the market cycle |
+
+`INGESTION_INTERVAL_MIN` was previously read from the environment but never
+used — the scheduler had 5/30/15 hardcoded, so setting it to 30 changed
+nothing and NewsAPI's quota still went early. All four keys are honoured now.
+
+### Keep the heavy jobs off the boot path
+
+The blueprint sets `HEAVY_JOBS_ON_STARTUP=false`. On 512 MB this is not
+optional. The prediction cycle, the options snapshot and the drift retrain
+otherwise each get a one-off run a few minutes after every boot, on top of a
+process already holding FastAPI, pandas and the ONNX embedder. If one of those
+runs is what exhausts the memory, the OOM kill restarts the service, which
+schedules the run again — a crash loop rather than a single bad cycle.
+
+With it false, the cron triggers (00:20, 00:30, Sun 02:00 UTC) are untouched
+and you can still run a cycle by hand:
+
+```bash
+curl -X POST https://<service>.onrender.com/ingestion/trigger/predictions
+```
 
 ### If you have more RAM available
 
@@ -212,11 +239,15 @@ output directory verbatim, so pointing it at the repo root would publish
 
 ## Known limits of the free tier
 
-- **512 MB is the ceiling, and it is real.** The app boots at ~120 MB and the
-  prediction stack loads lazily on first use, reaching ~250–400 MB in practice.
-  Chroma's ONNX embedder is the largest runtime addition (~80 MB, downloaded on
-  first use) — drop `chromadb` from the slim requirements first if the service
-  starts OOMing.
+- **512 MB is the ceiling, and it is real.** The app boots at ~120 MB; Chroma's
+  ONNX embedder adds ~45 MB on its first embed, and the prediction cycle's
+  dataframes, HMM and GARCH fits are the largest transient on top of that.
+  Two things keep it inside the budget: `HEAVY_JOBS_ON_STARTUP=false` (above),
+  and the embedder being baked into the Docker image, so its 80 MB download and
+  tar extraction happen on the builder rather than in a near-full container.
+  If it still OOMs, set `RAG_ENABLED=false` — a dashboard env-var flip, no
+  redeploy. That drops ChromaDB, onnxruntime and the embedder from the process;
+  RAG-backed chat context and semantic search degrade and nothing else changes.
 - **Free services spin down after 15 minutes idle** unless the keep-warm
   workflow is running. The URL stays live either way; a cold visitor just waits.
 - **The disk is ephemeral.** SQLite ingestion history and the Chroma vector
@@ -229,8 +260,6 @@ output directory verbatim, so pointing it at the repo root would publish
 - **Groq is now in the request path for sentiment.** A scoring pass is one call
   per 20 headlines. At a 30-minute interval that is comfortable, but lowering
   the interval multiplies LLM calls as well as market-data calls.
-- **Market-data quotas are the real ceiling**, not compute. Tune
-  `INGESTION_INTERVAL_MIN` and `INSIGHT_MAX_ASSETS` before opening the link up.
 
 ## Verifying a deployment
 

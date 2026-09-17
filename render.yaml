@@ -57,16 +57,40 @@ services:
       - key: AUTH_SECRET
         generateValue: true     # Render generates and stores a random secret
 
-      # ── Ingestion ─────────────────────────────────────────────────────────
-      # 30 minutes, not the 5-minute default: nine scheduler jobs at 5 minutes
-      # exhaust NewsAPI's 100 requests/day within hours. Market-data quota is
-      # the binding constraint on this deployment, not compute.
+      # ── Ingestion ──────────────────────────────────────────────────────────
+      # Market-data quota is the binding constraint on this deployment, not
+      # compute. At the 5-minute default NewsAPI's 100 requests/day are gone
+      # before lunch. Every value below is read by ingestion.build_scheduler.
       - key: INGESTION_ENABLED
         value: "true"
       - key: INGESTION_INTERVAL_MIN
-        value: "30"
+        value: "30"             # crypto + stocks → 48 cycles/day
+      - key: OHLCV_INTERVAL_MIN
+        value: "60"             # yfinance bars change slowly; halve the churn
+      - key: NEWS_INTERVAL_MIN
+        value: "60"             # 24 NewsAPI calls/day, well inside the 100 cap
+      - key: INSIGHT_INTERVAL_MIN
+        value: "60"             # insights ride the market cycle, throttled to 1h
       - key: INSIGHT_MAX_ASSETS
         value: "4"              # trimmed from 6 — each one costs an LLM call
+
+      # ── Memory budget (512 MB) ─────────────────────────────────────────────
+      # The FLUX-X prediction cycle, the drift retrain and the options snapshot
+      # must not run a few minutes after boot here. They are the heaviest work
+      # the process does — price history in dataframes, an HMM and a GARCH fit
+      # per asset — and running them on every start is what turns a single OOM
+      # kill into a restart loop, since each restart queues them again. Their
+      # cron triggers (00:20 / 00:30 / Sun 02:00 UTC) are unaffected, and
+      # POST /ingestion/trigger/predictions runs the cycle on demand.
+      - key: HEAVY_JOBS_ON_STARTUP
+        value: "false"
+
+      # The escape hatch if this still runs out of room: false drops ChromaDB,
+      # onnxruntime and the MiniLM embedder from the process. RAG-backed chat
+      # context and semantic search degrade; everything else is untouched. It
+      # is an env-var flip in the dashboard, not a redeploy.
+      - key: RAG_ENABLED
+        value: "true"
 
       # ── CORS ──────────────────────────────────────────────────────────────
       # Set to the Cloudflare Pages origin once that project exists. Until then

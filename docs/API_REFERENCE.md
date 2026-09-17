@@ -40,7 +40,7 @@ Interactive docs are available at `http://localhost:8000/docs` (Swagger) and
 | Method | Path | Description |
 |---|---|---|
 | GET | `/ingestion/status` | Scheduler status and per-job last-run metadata |
-| POST | `/ingestion/trigger/{job}` | Trigger a job: `crypto`, `stocks`, `ohlcv`, `news`, `market` |
+| POST | `/ingestion/trigger/{job}` | Trigger a job: `crypto`, `stocks`, `ohlcv`, `news`, `market`, `insights`, `predictions` |
 
 ## Prediction Agent
 

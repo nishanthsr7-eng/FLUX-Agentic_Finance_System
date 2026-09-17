@@ -36,6 +36,25 @@ ENV HOME=/home/user \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
+# ── Memory budget ────────────────────────────────────────────────────────
+# All of this exists because the free tier gives 512 MB and 0.1 CPU.
+#
+# The *_NUM_THREADS vars: numpy/OpenBLAS, xgboost and onnxruntime each size
+# their thread pools from the host's core count. Render reports many cores
+# while giving 0.1 of one, so the defaults allocate a dozen per-thread arenas
+# and buffers that can never run in parallel anyway — pure resident memory.
+#
+# MALLOC_ARENA_MAX: glibc otherwise creates up to 8 * ncores malloc arenas and
+# is slow to return them to the OS. Capping it at 2 is the cheapest RSS win
+# available to a threaded Python process in a small container.
+ENV OMP_NUM_THREADS=1 \
+    OPENBLAS_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1 \
+    NUMEXPR_NUM_THREADS=1 \
+    MALLOC_ARENA_MAX=2 \
+    TOKENIZERS_PARALLELISM=false \
+    ANONYMIZED_TELEMETRY=False
+
 WORKDIR $HOME/app
 
 # ── Dependencies ─────────────────────────────────────────────────────────────
@@ -61,6 +80,25 @@ RUN if [ "$FULL" = "1" ]; then \
     else \
         pip install --no-cache-dir --user -r backend/requirements-slim.txt; \
     fi
+
+# ── Embedding model ──────────────────────────────────────────────────
+# Bake ChromaDB's all-MiniLM-L6-v2 ONNX embedder into the image.
+#
+# Chroma fetches it lazily, on the first embed call, into ~/.cache/chroma — an
+# 80 MB download plus a tar extraction plus building the first InferenceSession,
+# all inside a process that is already close to the 512 MB ceiling. That spike
+# is the most likely OOM on this plan, and it recurs on every boot because the
+# free tier's disk is ephemeral while the image is not.
+#
+# Doing it here pays the cost once, at build time, on the builder's larger box;
+# at runtime the file is simply already present. It also takes a network
+# dependency off the request path — an S3 blip can no longer fail an embed.
+#
+# It has to be a real embed rather than just a constructor, because the
+# download is triggered from __call__. `|| true` keeps a transient build-time
+# network failure from breaking the image: the runtime path still works, it
+# just falls back to downloading on first use, exactly as it does today.
+RUN python -c "from chromadb.utils.embedding_functions import DefaultEmbeddingFunction as D; D()(['warm up the onnx embedder'])" || true
 
 # ── Application ──────────────────────────────────────────────────────────────
 COPY --chown=user backend ./backend

@@ -87,10 +87,29 @@ system.
 
 APScheduler (`AsyncIOScheduler`) runs the background work:
 
-- Crypto + stock price snapshots every 5 minutes.
-- Daily OHLCV refresh every 30 minutes.
-- News ingestion every 15 minutes.
-- Prediction cycle and outcome resolution (when models are trained).
+Every interval is a setting, not a constant. The defaults suit development;
+deployment widens them to stay inside the free API quotas.
+
+| Job | Setting | Default |
+|---|---|---|
+| Crypto + stock price snapshots | `INGESTION_INTERVAL_MIN` | 5 min |
+| Daily OHLCV refresh | `OHLCV_INTERVAL_MIN` | 30 min |
+| News ingestion | `NEWS_INTERVAL_MIN` | 15 min |
+| AI insight cycle | `INSIGHT_INTERVAL_MIN` | 15 min (chained) |
+| Prediction cycle, options snapshot, drift retrain | cron | 00:30 / 00:20 / Sun 02:00 UTC |
+
+The insight cycle has no trigger of its own. It is **chained onto the market
+cycle**: the market job ingests, then awaits the insight job, throttled to
+`INSIGHT_INTERVAL_MIN`. The insight job reads the in-memory cache that
+ingestion writes, so two independent triggers raced — on a cold start the
+insight run fired against an empty cache and produced nothing. Chaining also
+means the two never run concurrently, which matters on a small host.
+
+The prediction cycle, the options snapshot and the drift retrain also get a
+one-off run shortly after startup when `HEAVY_JOBS_ON_STARTUP` is true (the
+default, and convenient in development). Constrained hosts set it false; their
+cron triggers still fire, and `POST /ingestion/trigger/predictions` runs the
+cycle on demand.
 
 Each job records last-run metadata exposed via `/ingestion/status` and
 `/health`.

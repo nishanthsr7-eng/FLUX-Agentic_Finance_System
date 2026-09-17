@@ -69,6 +69,13 @@ def init_chroma() -> bool:
     Returns True if successful, False if ChromaDB unavailable.
     """
     global _chroma_client, _rag_available
+    if not settings.RAG_ENABLED:
+        # One env var takes ChromaDB, onnxruntime and the ~80 MB MiniLM model
+        # out of the process entirely. Every rag.* helper already no-ops when
+        # _rag_available is False, so the app keeps working without a redeploy.
+        log.info("RAG disabled (RAG_ENABLED=false) — skipping ChromaDB init")
+        _rag_available = False
+        return False
     try:
         import chromadb
         _CHROMA_DIR.mkdir(parents=True, exist_ok=True)
