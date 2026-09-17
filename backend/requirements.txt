@@ -14,6 +14,7 @@ yfinance>=0.2.40
 # ── Persistence ───────────────────────────────────────────────────────────────
 aiosqlite>=0.20.0           # async SQLite driver
 pymysql>=1.1.0              # MySQL driver for the seeded /db/* dataset
+certifi>=2024.2.2           # CA bundle for MySQL TLS (managed tiers refuse plaintext)
 
 # ── Scheduling ────────────────────────────────────────────────────────────────
 apscheduler>=3.10.4         # AsyncIOScheduler

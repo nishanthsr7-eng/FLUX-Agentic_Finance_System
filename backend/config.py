@@ -71,6 +71,13 @@ class Settings(BaseSettings):
     MYSQL_USER:     str = "root"
     MYSQL_PASSWORD: str = ""
     MYSQL_DB:       str = "flux"
+    # Managed/free MySQL tiers (TiDB Serverless, Aiven, PlanetScale) refuse
+    # plaintext connections. Local MySQL doesn't want TLS at all, so this stays
+    # off by default and deployment turns it on.
+    MYSQL_SSL:      bool = False
+    # Optional CA bundle path. Empty → the system trust store, which is what
+    # every managed provider's public cert chains to.
+    MYSQL_SSL_CA:   str = ""
 
     # ── Ingestion ─────────────────────────────────────────────
     INGESTION_ENABLED:        bool = True

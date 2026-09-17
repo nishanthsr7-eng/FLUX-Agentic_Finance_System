@@ -30,6 +30,7 @@ from __future__ import annotations
 import logging
 from contextlib import contextmanager
 
+import certifi
 import pymysql
 from pymysql.cursors import DictCursor
 
@@ -52,6 +53,16 @@ def _conn_kwargs(include_db: bool = True) -> dict:
     )
     if include_db:
         kw["database"] = settings.MYSQL_DB
+    if settings.MYSQL_SSL:
+        # Managed tiers (TiDB Serverless, Aiven, PlanetScale) refuse plaintext.
+        # Passing ssl_ca is what actually flips PyMySQL into TLS — a bare
+        # ssl={} dict is falsy there and would silently connect unencrypted.
+        # certifi ships the CA bundle those providers' certs chain to, and is
+        # already present via httpx, so it works identically on Windows and in
+        # the deployment container.
+        kw["ssl_ca"] = settings.MYSQL_SSL_CA or certifi.where()
+        kw["ssl_verify_cert"] = True
+        kw["ssl_verify_identity"] = True
     return kw
 
 
