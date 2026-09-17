@@ -5,7 +5,7 @@ FLUX deploys as three free pieces:
 | Piece | Host | Free tier |
 |---|---|---|
 | Static frontend | Cloudflare Pages | Unlimited sites, no sleep |
-| FastAPI backend | Hugging Face Spaces (Docker) | 16 GB RAM, 2 vCPU, 50 GB disk |
+| FastAPI backend | Google Cloud Run | 2M requests/mo, scales to zero |
 | MySQL dataset | TiDB Serverless | 5 GB, no forced sleep |
 | LLM (chat, insights) | Groq | Free API tier |
 
@@ -15,11 +15,18 @@ There is no paid step anywhere in this guide.
 
 The backend installs torch, transformers (FinBERT), chromadb and xgboost —
 roughly 2 GB, needing 1–2 GB RAM at idle. That does not fit the 512 MB free
-tiers on Render, Fly or Railway; Spaces is the only free host large enough.
+tiers on Render, Fly or Railway. Cloud Run lets a service ask for 2–4 GiB and
+bills per request-second, so a demo that is idle most of the day stays inside
+the always-free allowance.
+
+Hugging Face Spaces was the original choice here and the guide said so until
+July 2026, when Docker Spaces moved behind PRO ($9/month). Spaces is still the
+least-effort option if you happen to have PRO — the Dockerfile runs there
+unchanged apart from the port.
 
 The frontend is static, so it does not belong on the same host: Pages serves it
-from the edge with no cold start, and the Space can sleep without the site
-going down with it.
+from the edge with no cold start, and the API can scale to zero without the
+site going down with it.
 
 Ollama is local-only. Nothing free will host a local LLM, so the deployed build
 talks to an OpenAI-compatible endpoint instead — see [backend/llm.py](../backend/llm.py).
@@ -60,63 +67,73 @@ Any OpenAI-compatible endpoint works — OpenRouter's `:free` models and
 Gemini's compatibility shim are both drop-in. Change `LLM_BASE_URL` and
 `LLM_MODEL` to switch.
 
-## 3. Backend — Hugging Face Spaces
+## 3. Backend — Google Cloud Run
 
-1. Create a Space at <https://huggingface.co/new-space> → SDK: **Docker**,
-   visibility public (private Spaces are not free to serve).
-2. In the **GitHub repo**, add these under
-   *Settings → Secrets and variables → Actions*:
+### One-time account setup
 
-   | Secret | Value |
-   |---|---|
-   | `HF_TOKEN` | A **write** token from <https://huggingface.co/settings/tokens> |
-   | `HF_USERNAME` | Your Hugging Face username |
-   | `HF_SPACE` | The Space name, e.g. `flux-api` |
+1. Create a project at <https://console.cloud.google.com/projectcreate>, e.g.
+   `flux-api`. Note the **project ID** — it is not always what you typed.
+2. Enable billing on it. A card is required even for free-tier use; nothing is
+   charged while you stay inside the allowance below.
+3. Install the CLI: <https://cloud.google.com/sdk/docs/install>, then
 
-3. In the **Space**, add the runtime config under
-   *Settings → Variables and secrets*:
-
-   ```
-   LLM_API_KEY      = gsk_...                # secret
-   LLM_BASE_URL     = https://api.groq.com/openai/v1
-   LLM_MODEL        = llama-3.3-70b-versatile
-   MYSQL_HOST       = gateway01.<region>.prod.aws.tidbcloud.com
-   MYSQL_PORT       = 4000
-   MYSQL_USER       = <user>
-   MYSQL_PASSWORD   = <password>             # secret
-   MYSQL_DB         = flux
-   MYSQL_SSL        = true
-   AUTH_REQUIRED    = true
-   AUTH_SECRET      = <a long random string> # secret
-   CORS_ORIGINS     = ["https://<your-site>.pages.dev"]
-   INGESTION_ENABLED        = true
-   INGESTION_INTERVAL_MIN   = 30
+   ```bash
+   gcloud auth login
+   gcloud config set project <your-project-id>
+   gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com
    ```
 
-   Plus whichever market-data keys you use (`FINNHUB_API_KEY`,
-   `COINGECKO_API_KEY`, `NEWSAPI_KEY`, …) — see [API_KEYS.md](API_KEYS.md).
+### Deploy
 
-4. Push to `main`. The
-   [deploy workflow](../.github/workflows/deploy-hf.yml) syncs the repo to the
-   Space and it builds automatically. First build takes ~10 minutes; torch and
-   the FinBERT weights dominate.
+From the repo root:
 
-5. Check `https://<username>-<space>.hf.space/health`. It should report
-   `"provider": "openai"` and your model.
+```bash
+gcloud run deploy flux-api   --source .   --region asia-south1   --allow-unauthenticated   --memory 2Gi   --cpu 2   --timeout 300   --max-instances 3   --min-instances 0
+```
+
+Cloud Build builds the Dockerfile and Cloud Run serves it. The first build takes
+~10 minutes; torch and the FinBERT weights dominate. The command prints the
+service URL, `https://flux-api-<hash>-<region>.a.run.app` — that is what the
+frontend needs in step 4.
+
+`--memory 2Gi` is not optional. The default 512 MiB cannot import torch, and the
+failure mode is an opaque "container failed to start" rather than an OOM message.
+
+### Runtime configuration
+
+Set the secrets and variables on the service. Values come from steps 1 and 2:
+
+```bash
+gcloud run services update flux-api --region asia-south1   --set-env-vars "LLM_BASE_URL=https://api.groq.com/openai/v1"   --set-env-vars "LLM_MODEL=llama-3.3-70b-versatile"   --set-env-vars "LLM_API_KEY=gsk_..."   --set-env-vars "MYSQL_HOST=gateway01.<region>.prod.aws.tidbcloud.com"   --set-env-vars "MYSQL_PORT=4000"   --set-env-vars "MYSQL_USER=<user>"   --set-env-vars "MYSQL_PASSWORD=<password>"   --set-env-vars "MYSQL_DB=flux"   --set-env-vars "MYSQL_SSL=true"   --set-env-vars "AUTH_REQUIRED=true"   --set-env-vars "AUTH_SECRET=<a long random string>"   --set-env-vars "INGESTION_ENABLED=true"   --set-env-vars "INGESTION_INTERVAL_MIN=30"
+```
+
+Plus whichever market-data keys you use (`FINNHUB_API_KEY`, `COINGECKO_API_KEY`,
+`NEWSAPI_KEY`, …) — see [API_KEYS.md](API_KEYS.md). For anything sensitive,
+Secret Manager (`--set-secrets`) is better than `--set-env-vars`; env vars are
+visible to anyone with console read access on the project.
+
+Then check `https://<service-url>/health`. It should report `"provider":
+"openai"` and your model.
 
 **Raise `INGESTION_INTERVAL_MIN`.** The scheduler runs nine jobs; at the default
 5 minutes a public deployment will exhaust the free market-data quotas
 (Finnhub allows 60 requests/minute, NewsAPI 100 requests/day) within hours.
 
+### Redeploying
+
+Re-run the same `gcloud run deploy` command. There is no push-to-deploy wiring;
+adding it needs a service account and Workload Identity Federation, which is
+more setup than a one-command redeploy is worth for this project.
+
 ## 4. Frontend — Cloudflare Pages
 
-1. Edit **`js/flux-config.js`** and set `PRODUCTION_API` to your Space URL:
+1. Edit **`js/flux-config.js`** and set `PRODUCTION_API` to your Cloud Run URL:
 
    ```js
-   var PRODUCTION_API = 'https://<username>-<space>.hf.space';
+   var PRODUCTION_API = 'https://flux-api-<hash>-<region>.a.run.app';
    ```
 
-2. Edit **`pages/analysis.html`** and replace `https://CHANGE-ME.hf.space` in
+2. Edit **`pages/analysis.html`** and replace `https://CHANGE-ME.run.app` in
    the `connect-src` of its CSP with the same URL. That page has a
    Content-Security-Policy, so the browser blocks the API regardless of what
    the config resolves to unless the origin is named there.
@@ -131,8 +148,11 @@ Gemini's compatibility shim are both drop-in. Change `LLM_BASE_URL` and
    | Build command | `npm run build` |
    | Build output directory | `dist` |
 
-5. Deploy, then set `CORS_ORIGINS` in the Space to the `*.pages.dev` domain
-   Cloudflare gives you and restart the Space.
+5. Deploy, then point the API at the `*.pages.dev` domain Cloudflare gives you:
+
+   ```bash
+   gcloud run services update flux-api --region asia-south1      --set-env-vars 'CORS_ORIGINS=["https://<your-site>.pages.dev"]'
+   ```
 
 The build copies an allowlist into `dist/` — see
 [scripts/build-static.mjs](../scripts/build-static.mjs). Pages serves its
@@ -143,20 +163,26 @@ output directory verbatim, so pointing it at the repo root would publish
 
 ## Known limits of the free tier
 
-- **The Space sleeps after 48 hours idle.** The first request after that waits
-  for a cold start. Nothing is lost; it restarts from the image.
-- **The Space's disk is ephemeral.** SQLite ingestion history and the Chroma
-  vector store reset on restart. Anything that must survive belongs in MySQL.
-  Persistent storage on Spaces is a paid add-on.
-- **Free Spaces are public.** The code is already on GitHub, but treat the
-  running API as world-readable and keep `AUTH_REQUIRED=true`.
+- **Cloud Run scales to zero.** The first request after an idle period pays a
+  cold start, and this image is slow to start because importing torch is slow —
+  budget 30–60 s. `--min-instances 1` removes it but leaves an instance billing
+  around the clock, which does not stay inside the free allowance.
+- **The container filesystem is in-memory.** SQLite ingestion history and the
+  Chroma vector store reset on every new revision *and* count against the 2 GiB
+  RAM while they live. Anything that must survive belongs in MySQL.
+- **`--allow-unauthenticated` makes the API world-reachable.** That is what the
+  static frontend needs, so keep `AUTH_REQUIRED=true` and treat every route as
+  publicly callable.
+- **Watch the billing page for the first week.** The free allowance is per-month
+  and generous for a demo, but a scheduler misconfiguration that keeps an
+  instance warm will quietly eat it. Set a budget alert at $1.
 - **Market-data quotas are the real ceiling**, not compute. Tune
   `INGESTION_INTERVAL_MIN` and `INSIGHT_MAX_ASSETS` before opening the link up.
 
 ## Verifying a deployment
 
 ```bash
-curl https://<username>-<space>.hf.space/health
+curl https://<service-url>/health
 ```
 
 Check in the response:
@@ -167,4 +193,4 @@ Check in the response:
 
 Then open the Pages URL and confirm the browser console is clean. A
 `CHANGE-ME` error there means step 4.1 was missed; a CORS error means the
-Space's `CORS_ORIGINS` does not list the Pages domain.
+service's `CORS_ORIGINS` does not list the Pages domain.

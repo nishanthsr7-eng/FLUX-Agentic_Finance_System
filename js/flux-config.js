@@ -21,7 +21,7 @@
   // ── Edit this one line after deploying the backend ────────────────────────
   // Hugging Face Space URLs look like:
   //   https://<username>-<space-name>.hf.space
-  var PRODUCTION_API = 'https://nishanth2489-flux-api.hf.space';
+  var PRODUCTION_API = 'https://CHANGE-ME.run.app';
 
   var host = window.location.hostname;
   var isLocal = host === 'localhost' || host === '127.0.0.1' || host === '';

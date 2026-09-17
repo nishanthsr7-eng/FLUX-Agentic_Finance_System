@@ -1,0 +1,55 @@
+# Upload allowlist for `gcloud run deploy --source .`
+#
+# gcloud ships this directory to Cloud Build before the Dockerfile runs. Without
+# this file it falls back to .gitignore, which is close but not the same set —
+# ai_engine/ is tracked in git yet has no business in a build context, and the
+# defaults would also send .git/ and node_modules/.
+#
+# Keep in step with .dockerignore. That one prunes the context the daemon sees;
+# this one prunes what leaves the machine at all.
+
+# Bulk data — Dataset/ alone is ~30 GB, ai_engine ~2.4 GB.
+Dataset/
+ai_engine/
+
+.git/
+.github/
+node_modules/
+.venv/
+venv/
+.agent/
+.claude/
+.cursor/
+.vscode/
+.idea/
+
+# Frontend — deployed separately to Cloudflare Pages, never served by the API.
+js/
+css/
+pages/
+assets/
+index.html
+package.json
+package-lock.json
+dist/
+scripts/
+
+# Local-only state and caches
+*.db
+*.db-wal
+*.db-shm
+flux_chroma/
+*.log
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Secrets are injected as Cloud Run env vars — they never enter a build.
+.env
+.env.*
+!.env.example
+
+# Archived training runs (not loaded at request time)
+backend/prediction/models/baseline_backup/
+backend/prediction/models/fred_model_gate1/
