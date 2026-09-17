@@ -72,3 +72,6 @@ Dataset/
 
 # Stray pip-redirect files
 =*.*
+
+# Wrangler build artifacts and local miniflare state.
+keep-warm-worker/.wrangler/
