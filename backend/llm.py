@@ -49,6 +49,19 @@ class LLMError(RuntimeError):
     """Raised when the configured provider is unreachable or errors out."""
 
 
+def _describe(exc: Exception) -> str:
+    """
+    Readable one-liner for an exception.
+
+    httpx's timeout classes stringify to "", which would otherwise surface to
+    the client as a bare "Ollama error: " — the class name is the whole signal
+    for those, and a cold model load hitting the request timeout is by far the
+    most common local failure.
+    """
+    msg = str(exc).strip()
+    return f"{type(exc).__name__}: {msg}" if msg else type(exc).__name__
+
+
 # ── Provider resolution ──────────────────────────────────────────────────────
 
 def provider() -> str:
@@ -146,7 +159,7 @@ async def _openai_chat(
     except (KeyError, IndexError) as exc:
         raise LLMError("LLM returned an unexpected response shape") from exc
     except Exception as exc:
-        raise LLMError(f"LLM error: {exc}") from exc
+        raise LLMError(f"LLM error: {_describe(exc)}") from exc
 
 
 async def _ollama_chat(messages: list[dict[str, str]], *, timeout: float) -> str:
@@ -166,7 +179,7 @@ async def _ollama_chat(messages: list[dict[str, str]], *, timeout: float) -> str
     except httpx.ConnectError as exc:
         raise LLMError("Ollama is not running — start with: ollama serve") from exc
     except Exception as exc:
-        raise LLMError(f"Ollama error: {exc}") from exc
+        raise LLMError(f"Ollama error: {_describe(exc)}") from exc
 
 
 # ── Chat (streaming) ─────────────────────────────────────────────────────────

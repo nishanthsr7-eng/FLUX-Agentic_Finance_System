@@ -1294,6 +1294,9 @@ async def ai_chat_stream(body: ChatRequest):
         try:
             async for token in llm.stream_chat(messages, timeout=60.0):
                 yield f"data: {_json.dumps({'content': token})}\n\n"
+            # The provider's own terminator is consumed by the token generator,
+            # so the sentinel the client waits on is emitted here.
+            yield "data: [DONE]\n\n"
         except llm.LLMError as exc:
             yield f"data: {_json.dumps({'error': str(exc)})}\n\n"
             yield "data: [DONE]\n\n"

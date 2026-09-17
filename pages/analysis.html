@@ -8,8 +8,11 @@
   <meta name="theme-color" content="#08080a">
   <!-- CSP: no inline/eval scripts (all JS is external since the §refactor).
        'unsafe-inline' remains for STYLE only — the markup still uses style=""
-       attributes. connect-src lists the dev API; same-origin covers prod. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:8000 http://127.0.0.1:8000; base-uri 'self'; form-action 'self'; object-src 'none'">
+       attributes. connect-src lists the dev API plus the deployed backend:
+       the frontend is served from a different origin than the API, so
+       same-origin does NOT cover prod and the API host must be named here.
+       Keep this in sync with PRODUCTION_API in js/flux-config.js. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:8000 http://127.0.0.1:8000 https://CHANGE-ME.hf.space; base-uri 'self'; form-action 'self'; object-src 'none'">
   <title>Analysis | FLUX</title>
   <link rel="icon"
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300e5a0' stroke-width='2'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E">
@@ -545,6 +548,7 @@
   </main>
   </div>
 
+  <script src="../js/flux-config.js"></script>
   <script src="../js/flux-data.js"></script>
   <script src="../js/seed.js"></script>
   <script src="../js/analysis.js"></script>
