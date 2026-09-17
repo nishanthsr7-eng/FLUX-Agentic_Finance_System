@@ -1,0 +1,19 @@
+# Cloudflare Worker that keeps the Render free instance from spinning down.
+#
+# This lives in a SUBFOLDER on purpose. Cloudflare Pages looks for a Wrangler
+# config at the repository root, and finding one there would make it treat the
+# whole repo as a Worker project instead of building the static site. Deploy
+# this by running wrangler from inside this directory, never from the root.
+
+name = "flux-keep-warm"
+main = "src/index.js"
+compatibility_date = "2026-09-17"
+
+# Every 10 minutes, against Render's 15-minute idle timeout. Unlike GitHub's
+# scheduler — which queues cron on shared runners and can drift by hours — a
+# Workers cron trigger fires on Cloudflare's own edge and holds its schedule.
+[triggers]
+crons = ["*/10 * * * *"]
+
+[vars]
+FLUX_API_URL = "https://flux-api-vono.onrender.com"
