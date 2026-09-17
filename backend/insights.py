@@ -24,6 +24,7 @@ import httpx
 
 from .config import settings
 from .db import insert_insight
+from . import llm
 
 log = logging.getLogger("flux.insights")
 
@@ -70,35 +71,17 @@ Response format: plain text, max 3 sentences, professional tone."""
 
 
 async def _ollama_call(prompt: str) -> str:
-    """Non-streaming Ollama call. Raises RuntimeError on failure."""
-    payload = {
-        "model":   settings.OLLAMA_MODEL,
-        "messages": [{"role": "user", "content": prompt}],
-        "stream":  False,
-    }
-    try:
-        r = await _client().post(
-            f"{settings.OLLAMA_URL}/api/chat",
-            json=payload,
-            timeout=60.0,
-        )
-        r.raise_for_status()
-        return r.json().get("message", {}).get("content", "").strip()
-    except httpx.ConnectError:
-        raise RuntimeError("Ollama is not running — start with: ollama serve")
-    except Exception as exc:
-        raise RuntimeError(f"Ollama error: {exc}")
+    """
+    Single-prompt completion via the configured provider (hosted or Ollama).
+    Raises RuntimeError on failure — LLMError subclasses it, so the existing
+    callers' error handling is unchanged.
+    """
+    return await llm.chat([{"role": "user", "content": prompt}], timeout=60.0)
 
 
 def _strip_fences(text: str) -> str:
-    """Remove markdown code fences that Ollama sometimes adds."""
-    t = text.strip()
-    if t.startswith("```"):
-        parts = t.split("```")
-        t = parts[1] if len(parts) > 1 else t
-        if t.startswith("json"):
-            t = t[4:]
-    return t.strip()
+    """Remove markdown code fences that models sometimes add."""
+    return llm.strip_fences(text)
 
 
 async def generate_asset_insight(asset: dict) -> dict | None:

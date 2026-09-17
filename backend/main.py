@@ -67,6 +67,7 @@ from .user_api import db_router
 from .trading_api import trading_router, ensure_trading_schema
 from .payments_api import payments_router, ensure_payments_schema
 from .auth import auth_router, ensure_auth_schema, require_user
+from . import llm
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(name)s  %(message)s")
@@ -390,13 +391,7 @@ async def health():
             }
             for j in _scheduler.get_jobs()
         ]
-    ollama_ok = False
-    try:
-        async with httpx.AsyncClient(timeout=1.5) as client:
-            r = await client.get(f"{settings.OLLAMA_URL}/api/tags")
-            ollama_ok = r.status_code == 200
-    except Exception:
-        ollama_ok = False
+    agent_ok, agent_model = await llm.health()
 
     return {
         "status":    "ok",
@@ -407,7 +402,11 @@ async def health():
             "jobs":    sched_jobs,
         },
         "ingestion": ingestion_status(),
-        "agent": {"available": ollama_ok, "model": settings.OLLAMA_MODEL},
+        "agent": {
+            "available": agent_ok,
+            "model":     agent_model,
+            "provider":  llm.provider(),
+        },
         "keys": {
             "coingecko": bool(settings.COINGECKO_API_KEY),
             "finnhub":   bool(settings.FINNHUB_API_KEY),
@@ -734,22 +733,12 @@ async def ai_rag_query(body: RagQueryRequest):
         {"role": "user",    "content": body.query},
     ]
     try:
-        payload = {
-            "model":    settings.OLLAMA_MODEL,
-            "messages": messages,
-            "stream":   False,
-        }
-        r = await get_client().post(
-            f"{settings.OLLAMA_URL}/api/chat",
-            json=payload,
-            timeout=45.0,
-        )
-        r.raise_for_status()
-        answer = r.json().get("message", {}).get("content", "").strip()
-    except httpx.ConnectError:
-        raise HTTPException(503, "Ollama is not running — start it with: ollama serve")
+        answer = await llm.chat(messages, timeout=45.0)
+    except llm.LLMError as exc:
+        log.error("RAG chat failed: %s", exc)
+        raise HTTPException(503, str(exc))
     except Exception as exc:
-        log.error("RAG Ollama call failed: %s", exc)
+        log.error("RAG chat failed: %s", exc)
         raise HTTPException(502, "AI unavailable")
 
     resp: dict = {
@@ -1262,24 +1251,9 @@ async def ai_intel(symbol: str):
     )
 
     try:
-        payload = {
-            "model": settings.OLLAMA_MODEL,
-            "messages": [{"role": "user", "content": prompt}],
-            "stream": False,
-        }
-        r = await get_client().post(
-            f"{settings.OLLAMA_URL}/api/chat",
-            json=payload,
-            timeout=30.0,
+        raw = llm.strip_fences(
+            await llm.chat([{"role": "user", "content": prompt}], timeout=30.0)
         )
-        r.raise_for_status()
-        raw = r.json().get("message", {}).get("content", "").strip()
-
-        # Strip markdown fences if the model wrapped its response
-        if raw.startswith("```"):
-            raw = raw.split("```")[1]
-            if raw.startswith("json"):
-                raw = raw[4:]
 
         import json as _json
         intel = _json.loads(raw)
@@ -1314,35 +1288,14 @@ async def ai_chat_stream(body: ChatRequest):
     import json as _json
     from fastapi.responses import StreamingResponse
 
-    payload = {
-        "model": settings.OLLAMA_MODEL,
-        "messages": [{"role": m.role, "content": m.content} for m in body.messages],
-        "stream": True,
-    }
+    messages = [{"role": m.role, "content": m.content} for m in body.messages]
 
     async def generate():
         try:
-            async with get_client().stream(
-                "POST",
-                f"{settings.OLLAMA_URL}/api/chat",
-                json=payload,
-                timeout=60.0,
-            ) as r:
-                async for line in r.aiter_lines():
-                    if not line:
-                        continue
-                    try:
-                        chunk = _json.loads(line)
-                        token = chunk.get("message", {}).get("content", "")
-                        if token:
-                            yield f"data: {_json.dumps({'content': token})}\n\n"
-                        if chunk.get("done"):
-                            yield "data: [DONE]\n\n"
-                            return
-                    except Exception:
-                        continue
-        except httpx.ConnectError:
-            yield f"data: {_json.dumps({'error': 'Ollama is not running'})}\n\n"
+            async for token in llm.stream_chat(messages, timeout=60.0):
+                yield f"data: {_json.dumps({'content': token})}\n\n"
+        except llm.LLMError as exc:
+            yield f"data: {_json.dumps({'error': str(exc)})}\n\n"
             yield "data: [DONE]\n\n"
         except Exception as e:
             log.error("Streaming chat error: %s", e)
@@ -1491,28 +1444,20 @@ async def run_backtest(body: BacktestRequest):
 @app.post("/ai/chat")
 async def ai_chat(body: ChatRequest):
     """
-    Forward a chat request to the local Ollama instance and return the reply.
-    Ollama must be running with the model specified in OLLAMA_MODEL (default: aura).
+    Forward a chat request to the configured LLM provider and return the reply.
+
+    Provider is resolved in backend/llm.py: a hosted OpenAI-compatible endpoint
+    when LLM_API_KEY is set, otherwise the local Ollama instance (OLLAMA_MODEL).
     """
     try:
-        payload = {
-            "model": settings.OLLAMA_MODEL,
-            "messages": [{"role": m.role, "content": m.content} for m in body.messages],
-            "stream": False,
-        }
-        r = await get_client().post(
-            f"{settings.OLLAMA_URL}/api/chat",
-            json=payload,
+        content = await llm.chat(
+            [{"role": m.role, "content": m.content} for m in body.messages],
             timeout=30.0,
         )
-        r.raise_for_status()
-        data = r.json()
-        content = data.get("message", {}).get("content", "").strip()
         return {"content": content}
-    except httpx.ConnectError:
-        raise HTTPException(503, "Ollama is not running — start it with: ollama serve")
-    except httpx.HTTPStatusError as e:
-        raise HTTPException(502, f"Ollama error: {e.response.status_code}")
+    except llm.LLMError as e:
+        log.error("AI chat failed: %s", e)
+        raise HTTPException(503, str(e))
     except Exception as e:
-        log.error("Ollama chat failed: %s", e)
+        log.error("AI chat failed: %s", e)
         raise HTTPException(502, "AI unavailable")

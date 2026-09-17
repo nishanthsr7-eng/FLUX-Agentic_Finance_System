@@ -29,9 +29,20 @@ class Settings(BaseSettings):
     STOCKS_TTL:  int = 60     # Finnhub free tier: 60 req/min
     NEWS_TTL:    int = 300    # news refreshes every 5 min
 
-    # ── Ollama ───────────────────────────────────────────────
+    # ── Ollama (local dev LLM) ───────────────────────────────
     OLLAMA_URL:   str = "http://localhost:11434"
     OLLAMA_MODEL: str = "aura"
+
+    # ── Hosted LLM (deployment) ──────────────────────────────
+    # No free host will run Ollama for us, so deployed builds point at an
+    # OpenAI-compatible endpoint instead (Groq, OpenRouter, Gemini's compat
+    # shim, …). Setting LLM_API_KEY is what switches backend/llm.py over;
+    # leave it empty and everything keeps using local Ollama.
+    # LLM_PROVIDER: "" = auto (key present → openai), or force "openai"/"ollama".
+    LLM_PROVIDER: str = ""
+    LLM_BASE_URL: str = "https://api.groq.com/openai/v1"
+    LLM_API_KEY:  str = ""
+    LLM_MODEL:    str = "llama-3.3-70b-versatile"
 
     # ── CORS ─────────────────────────────────────────────────
     # Dev frontend origins only — widen explicitly via .env for deployment,
