@@ -33,7 +33,8 @@
     "dev": "live-server --port=3000 \"--ignorePattern=(\\.db(-wal|-shm)?$|\\.log$|[\\\\/](node_modules|flux_chroma|__pycache__|backend|scripts)([\\\\/]|$))\"",
     "start": "live-server --port=3000 \"--ignorePattern=(\\.db(-wal|-shm)?$|\\.log$|[\\\\/](node_modules|flux_chroma|__pycache__|backend|scripts)([\\\\/]|$))\"",
     "api": "uvicorn backend.main:app --reload --port 8000",
-    "test": "pytest backend/prediction -q"
+    "test": "pytest backend/prediction -q",
+    "build": "node scripts/build-static.mjs"
   },
   "devDependencies": {
     "live-server": "^1.2.2"

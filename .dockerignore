@@ -42,3 +42,6 @@ __pycache__/
 # Archived training runs (not loaded at request time)
 backend/prediction/models/baseline_backup/
 backend/prediction/models/fred_model_gate1/
+
+# Static build output — the API image never serves the frontend.
+dist/
