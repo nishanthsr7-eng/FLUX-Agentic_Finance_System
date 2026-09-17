@@ -80,6 +80,7 @@ transfers, and a discretionary-spending headroom meter.
 | Document | Purpose |
 |---|---|
 | [docs/SETUP.md](docs/SETUP.md) | Full local installation and run instructions |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deploy the full stack on free tiers |
 | [docs/FEATURES.md](docs/FEATURES.md) | Complete feature catalogue |
 | [docs/PAGES.md](docs/PAGES.md) | Every frontend page and what it does |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture, modules, data flow |
