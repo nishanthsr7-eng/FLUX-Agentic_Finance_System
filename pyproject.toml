@@ -8,6 +8,20 @@ license = { file = "LICENSE" }
 authors = [{ name = "Nishanth S", email = "nishanth.sr.7@gmail.com" }]
 keywords = ["fintech", "machine-learning", "xgboost", "fastapi", "conformal-prediction"]
 
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+# This file exists for metadata and for the pytest/ruff config below — the app
+# is never installed as a package (Docker and CI both install from
+# backend/requirements*.txt). Without an explicit empty package list setuptools
+# tries to auto-discover, finds js/, css/, pages/, backend/ and the rest side by
+# side in a flat layout, and refuses to build. Any build host that spots a
+# pyproject.toml and runs `pip install .` — Cloudflare Pages does — then fails
+# before the real frontend build ever starts.
+[tool.setuptools]
+packages = []
+
 [tool.pytest.ini_options]
 minversion = "8.0"
 # Only the prediction-agent suites are real tests. scripts/ holds one-shot
