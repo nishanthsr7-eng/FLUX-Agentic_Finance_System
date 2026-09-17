@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ FLUX — Agentic Finance System
+# FLUX — Agentic Finance System
 
 **An AI-powered finance platform: a calibrated machine-learning market-prediction agent behind a full digital-wallet experience.**
 
@@ -10,12 +10,32 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![XGBoost](https://img.shields.io/badge/XGBoost-EC4E20)](https://xgboost.readthedocs.io/)
 [![Paper trading only](https://img.shields.io/badge/trading-paper%20only-8957e5.svg)](#disclaimer)
+[![Live demo](https://img.shields.io/badge/live%20demo-nishanth--flux.pages.dev-2ea043.svg)](https://nishanth-flux.pages.dev)
 
 </div>
 
 <p align="center">
   <img src="docs/screenshots/landing.png" alt="FLUX landing page" width="100%">
 </p>
+
+---
+
+## Live demo
+
+**[nishanth-flux.pages.dev](https://nishanth-flux.pages.dev)**
+
+Sign in with the demo account to see the seeded portfolio, trade history and
+prediction cockpit, or register your own from the sign-up page:
+
+| | |
+|---|---|
+| Email | `nishanth@flux.app` |
+| Password | `FluxDemo@123` |
+
+Frontend on Cloudflare Pages, API on Render, MySQL on TiDB Serverless.
+
+> The API runs on a free instance. If it has been idle, the first request may
+> take up to a minute to wake it — the dashboard fills in once it responds.
 
 ---
 
@@ -81,6 +101,7 @@ transfers, and a discretionary-spending headroom meter.
 |---|---|
 | [docs/SETUP.md](docs/SETUP.md) | Full local installation and run instructions |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deploy the full stack on free tiers |
+| [docs/DEPLOYMENT_RECORD.md](docs/DEPLOYMENT_RECORD.md) | What is deployed, where, and the problems hit getting there |
 | [docs/FEATURES.md](docs/FEATURES.md) | Complete feature catalogue |
 | [docs/PAGES.md](docs/PAGES.md) | Every frontend page and what it does |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture, modules, data flow |

@@ -12,6 +12,10 @@ FLUX deploys as four free pieces:
 There is no paid step anywhere in this guide, and **no credit card is required
 at any point**. That constraint is what picked these four.
 
+This is the guide. For the deployment that actually exists — real URLs, the
+settings used, and the problems hit along the way — see
+[DEPLOYMENT_RECORD.md](DEPLOYMENT_RECORD.md).
+
 ## Why this split
 
 The full backend installs torch, transformers (FinBERT), chromadb and xgboost.
@@ -131,11 +135,24 @@ The free plan spins a service down after 15 minutes idle, and the next visitor
 then waits 30–60 s. The plan also allows 750 instance-hours per month and a
 month is 730 hours, so one service can stay up continuously and still fit.
 
-[.github/workflows/keep-warm.yml](../.github/workflows/keep-warm.yml) pings
-`/health` every 10 minutes to hold it open. To enable it, add a repository
+**Use an external uptime monitor.** UptimeRobot's free tier checks every 5
+minutes with no card required — point an HTTP(s) monitor at
+`https://<service>.onrender.com/health`. It holds the instance open and tells
+you about genuine downtime as well.
+
+`/health` answers both GET and HEAD, which matters because monitors default to
+HEAD and changing that is often a paid feature.
+
+[.github/workflows/keep-warm.yml](../.github/workflows/keep-warm.yml) does the
+same job on a 10-minute cron and works as a backup — add a repository
 **variable** (not a secret — it is a public URL) named `FLUX_API_URL` set to
 your service URL, under *Settings → Secrets and variables → Actions →
-Variables*.
+Variables*. Do not rely on it alone: GitHub queues scheduled workflows on
+shared runners and they drift, sometimes by hours, and GitHub disables
+scheduled workflows entirely after 60 days without a commit.
+
+A Cloudflare Worker cron trigger was also tried and never fired at all; see
+[DEPLOYMENT_RECORD.md](DEPLOYMENT_RECORD.md).
 
 This only fits if `flux-api` is the **only** service in the Render workspace.
 A second free service pushes the pair past 750 hours and both get suspended for
